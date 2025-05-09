@@ -47,6 +47,16 @@
       font-size: 12px;
       fill: #333;
     }
+    #loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    #error {
+      color: #d9534f;
+      padding: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -54,10 +64,16 @@
 <div id="container">
   <h3>Sudan Returnee Movement Visualization</h3>
   <div class="subtitle">Flow of returnees between key locations (sample data)</div>
+  <div id="loading">Loading map data...</div>
+  <div id="error"></div>
   <svg id="map" width="960" height="600"></svg>
 </div>
 
 <script>
+// Show loading state
+d3.select("#loading").style("display", "block");
+d3.select("#map").style("display", "none");
+
 const svg = d3.select("#map"),
       width = +svg.attr("width"),
       height = +svg.attr("height");
@@ -68,9 +84,6 @@ const projection = d3.geoMercator()
   .translate([width / 2, height / 2]);
 
 const path = d3.geoPath().projection(projection);
-
-// Sudan Admin 1 GeoJSON (via HDX, hosted on GitHub mirror)
-const geoJSON_URL = "https://raw.githubusercontent.com/deldersveld/topojson/master/countries/sudan/sudan-states.json";
 
 // Sample data
 const flows = [
@@ -118,123 +131,178 @@ svg.append("defs").append("marker")
   .attr("d", "M0,-5L10,0L0,5")
   .attr("fill", "#506489");
 
-d3.json(geoJSON_URL).then(data => {
-  const sudan = topojson.feature(data, data.objects.sudan);
+// Fallback GeoJSON data in case TopoJSON fails
+const fallbackGeoJSON = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Sudan"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [21.8, 22.0], [22.0, 21.0], [23.0, 20.0], [24.0, 19.0],
+          [25.0, 18.0], [26.0, 17.0], [27.0, 16.0], [28.0, 15.0],
+          [29.0, 14.0], [30.0, 13.0], [31.0, 12.0], [32.0, 11.0],
+          [33.0, 10.0], [34.0, 9.0], [35.0, 8.0], [36.0, 7.0],
+          [37.0, 8.0], [38.0, 9.0], [39.0, 10.0], [38.0, 11.0],
+          [37.0, 12.0], [36.0, 13.0], [35.0, 14.0], [34.0, 15.0],
+          [33.0, 16.0], [32.0, 17.0], [31.0, 18.0], [30.0, 19.0],
+          [29.0, 20.0], [28.0, 21.0], [27.0, 22.0], [26.0, 21.0],
+          [25.0, 20.0], [24.0, 19.0], [23.0, 18.0], [22.0, 17.0],
+          [21.8, 22.0]
+        ]]
+      }
+    }
+  ]
+};
 
-  // Draw Sudan map
-  svg.append("g")
-    .selectAll("path")
-    .data(sudan.features)
-    .enter().append("path")
-    .attr("d", path)
-    .attr("fill", "#e0e0e0")
-    .attr("stroke", "#999")
-    .attr("stroke-width", 0.5);
+function drawMap(geoData) {
+  try {
+    // Clear loading state
+    d3.select("#loading").style("display", "none");
+    d3.select("#map").style("display", "block");
+    
+    // Draw Sudan map
+    svg.append("g")
+      .selectAll("path")
+      .data(geoData.features)
+      .enter().append("path")
+      .attr("d", path)
+      .attr("fill", "#e0e0e0")
+      .attr("stroke", "#999")
+      .attr("stroke-width", 0.5);
 
-  // Plot flows
-  const flowLines = svg.append("g")
-    .selectAll("line")
-    .data(flows)
-    .enter().append("line")
-    .attr("x1", d => projection(locations[d.from])[0])
-    .attr("y1", d => projection(locations[d.from])[1])
-    .attr("x2", d => projection(locations[d.to])[0])
-    .attr("y2", d => projection(locations[d.to])[1])
-    .attr("stroke", d => colorScale(d.volume))
-    .attr("stroke-width", d => volumeScale(d.volume))
-    .attr("marker-end", "url(#arrow)")
-    .attr("class", "flow-line")
-    .on("mouseover", function(event, d) {
-      d3.select(this).attr("stroke-width", d => volumeScale(d.volume) + 2);
-      tooltip.transition()
-        .duration(200)
-        .style("opacity", .9);
-      tooltip.html(`
-        <strong>From:</strong> ${d.from}<br>
-        <strong>To:</strong> ${d.to}<br>
-        <strong>Returnees:</strong> ${d.volume.toLocaleString()}<br>
-        <strong>Date:</strong> ${d.date}
-      `)
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 28) + "px");
-    })
-    .on("mouseout", function() {
-      d3.select(this).attr("stroke-width", d => volumeScale(d.volume));
-      tooltip.transition()
-        .duration(500)
-        .style("opacity", 0);
-    });
+    // Plot flows
+    const flowLines = svg.append("g")
+      .selectAll("line")
+      .data(flows)
+      .enter().append("line")
+      .attr("x1", d => projection(locations[d.from])[0])
+      .attr("y1", d => projection(locations[d.from])[1])
+      .attr("x2", d => projection(locations[d.to])[0])
+      .attr("y2", d => projection(locations[d.to])[1])
+      .attr("stroke", d => colorScale(d.volume))
+      .attr("stroke-width", d => volumeScale(d.volume))
+      .attr("marker-end", "url(#arrow)")
+      .attr("class", "flow-line")
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("stroke-width", d => volumeScale(d.volume) + 2);
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", .9);
+        tooltip.html(`
+          <strong>From:</strong> ${d.from}<br>
+          <strong>To:</strong> ${d.to}<br>
+          <strong>Returnees:</strong> ${d.volume.toLocaleString()}<br>
+          <strong>Date:</strong> ${d.date}
+        `)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 28) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this).attr("stroke-width", d => volumeScale(d.volume));
+        tooltip.transition()
+          .duration(500)
+          .style("opacity", 0);
+      });
 
-  // Plot locations
-  const locationPoints = svg.append("g")
-    .selectAll("circle")
-    .data(Object.keys(locations))
-    .enter().append("circle")
-    .attr("cx", d => projection(locations[d])[0])
-    .attr("cy", d => projection(locations[d])[1])
-    .attr("r", 4)
-    .attr("fill", "#18375F")
-    .on("mouseover", function(event, d) {
-      d3.select(this).attr("r", 6);
-      tooltip.transition()
-        .duration(200)
-        .style("opacity", .9);
-      tooltip.html(`<strong>Location:</strong> ${d}`)
-        .style("left", (event.pageX + 10) + "px")
-        .style("top", (event.pageY - 28) + "px");
-    })
-    .on("mouseout", function() {
-      d3.select(this).attr("r", 4);
-      tooltip.transition()
-        .duration(500)
-        .style("opacity", 0);
-    });
+    // Plot locations
+    const locationPoints = svg.append("g")
+      .selectAll("circle")
+      .data(Object.keys(locations))
+      .enter().append("circle")
+      .attr("cx", d => projection(locations[d])[0])
+      .attr("cy", d => projection(locations[d])[1])
+      .attr("r", 4)
+      .attr("fill", "#18375F")
+      .on("mouseover", function(event, d) {
+        d3.select(this).attr("r", 6);
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", .9);
+        tooltip.html(`<strong>Location:</strong> ${d}`)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 28) + "px");
+      })
+      .on("mouseout", function() {
+        d3.select(this).attr("r", 4);
+        tooltip.transition()
+          .duration(500)
+          .style("opacity", 0);
+      });
 
-  // Add location labels
-  svg.append("g")
-    .selectAll("text")
-    .data(Object.keys(locations))
-    .enter().append("text")
-    .attr("x", d => projection(locations[d])[0] + 6)
-    .attr("y", d => projection(locations[d])[1] - 6)
-    .text(d => d)
-    .attr("font-size", "10px")
-    .attr("fill", "#333");
+    // Add location labels
+    svg.append("g")
+      .selectAll("text")
+      .data(Object.keys(locations))
+      .enter().append("text")
+      .attr("x", d => projection(locations[d])[0] + 6)
+      .attr("y", d => projection(locations[d])[1] - 6)
+      .text(d => d)
+      .attr("font-size", "10px")
+      .attr("fill", "#333");
 
-  // Add legend
-  const legend = svg.append("g")
-    .attr("transform", "translate(20,20)");
+    // Add legend
+    const legend = svg.append("g")
+      .attr("transform", "translate(20,20)");
 
-  const legendData = [10000, 20000, 30000];
+    const legendData = [10000, 20000, 30000];
 
-  // Legend lines
-  legend.selectAll("line")
-    .data(legendData)
-    .enter().append("line")
-    .attr("x1", 0)
-    .attr("x2", 30)
-    .attr("y1", (d,i) => i * 20)
-    .attr("y2", (d,i) => i * 20)
-    .attr("stroke", d => colorScale(d))
-    .attr("stroke-width", d => volumeScale(d));
+    // Legend lines
+    legend.selectAll("line")
+      .data(legendData)
+      .enter().append("line")
+      .attr("x1", 0)
+      .attr("x2", 30)
+      .attr("y1", (d,i) => i * 20)
+      .attr("y2", (d,i) => i * 20)
+      .attr("stroke", d => colorScale(d))
+      .attr("stroke-width", d => volumeScale(d));
 
-  // Legend text
-  legend.selectAll("text")
-    .data(legendData)
-    .enter().append("text")
-    .attr("x", 40)
-    .attr("y", (d,i) => i * 20 + 4)
-    .text(d => d.toLocaleString() + " returnees")
-    .attr("class", "legend-text");
+    // Legend text
+    legend.selectAll("text")
+      .data(legendData)
+      .enter().append("text")
+      .attr("x", 40)
+      .attr("y", (d,i) => i * 20 + 4)
+      .text(d => d.toLocaleString() + " returnees")
+      .attr("class", "legend-text");
 
-  // Legend title
-  legend.append("text")
-    .attr("x", 0)
-    .attr("y", -10)
-    .text("Flow Volume")
-    .attr("class", "legend-text")
-    .attr("font-weight", "bold");
-});
+    // Legend title
+    legend.append("text")
+      .attr("x", 0)
+      .attr("y", -10)
+      .text("Flow Volume")
+      .attr("class", "legend-text")
+      .attr("font-weight", "bold");
+
+  } catch (e) {
+    showError("Error drawing map: " + e.message);
+  }
+}
+
+function showError(message) {
+  d3.select("#loading").style("display", "none");
+  d3.select("#error").style("display", "block").text(message);
+  console.error(message);
+}
+
+// Try to load TopoJSON first, fallback to GeoJSON if it fails
+d3.json("https://raw.githubusercontent.com/deldersveld/topojson/master/countries/sudan/sudan-states.json")
+  .then(data => {
+    try {
+      const sudan = topojson.feature(data, data.objects.sudan);
+      drawMap(sudan);
+    } catch (e) {
+      console.warn("Failed to process TopoJSON, using fallback GeoJSON", e);
+      drawMap(fallbackGeoJSON);
+    }
+  })
+  .catch(error => {
+    console.warn("Failed to load TopoJSON, using fallback GeoJSON", error);
+    drawMap(fallbackGeoJSON);
+  });
 </script>
 
 </body>
