@@ -211,7 +211,7 @@ function showError(message) {
 }
 
 // Load the ADMIN1.json file instead of using the hardcoded GeoJSON
-d3.json("data/ADMIN1.json")
+d3.json("./data/ADMIN1.json")
   .then(data => {
     drawMap(data);
   })
