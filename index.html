@@ -1,732 +1,419 @@
 <!DOCTYPE html>
-<html lang="en" data-app="sudan-mobility-flow-monitoring">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Sudan — Mobility Flow Monitoring Dashboard (IOM)</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sudan Mobility Flow Monitoring Dashboard</title>
 
-  <!-- ======== CDNs ======== -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- ======== STYLE (IOM look & modern UI) ======== -->
   <style>
-    :root{
-      /* Brand */
-      --iom-blue:#0033A0;          /* IOM deep blue */
-      --iom-blue-accent:#418FDE;   /* IOM accent */
-      --mint:#5CB8B2;              /* accent 2 */
-      --yellow:#FFB81C;            /* KPI highlight */
-      --red:#D22630;               /* alert */
-      --bg:#0f172a;                /* slate-900 */
-      --panel:#111827;             /* gray-900 */
-      --muted:#94a3b8;             /* slate-400 */
-      --text:#e5e7eb;              /* gray-200 */
-      --chip:#1f2937;              /* gray-800 */
-      --card:#0b1223;              /* dark card */
-      --border:#1f2a44;            /* subtle border */
+    /* ===== Global Page Styles ===== */
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #f2f4f8, #ffffff);
+      overflow-x: hidden;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-      margin:0; background:linear-gradient(180deg, #0b1223 0%, #0f172a 100%); color:var(--text);
+
+    h1 {
+      font-size: 1.8rem;
+      color: #1e1e1e;
+      margin: 40px 0 20px;
+      text-align: center;
     }
-    header{
-      position:sticky; top:0; z-index:20; backdrop-filter: blur(6px);
-      background:rgba(11,18,35,.8); border-bottom:1px solid var(--border);
+
+    /* ===== Loader Section (Uiverse by Nawsome) ===== */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease;
     }
-    .topbar{display:flex; align-items:center; gap:16px; padding:14px 18px;}
-    .brand{display:flex; align-items:center; gap:12px}
-    .brand .logo{width:36px; height:36px; border-radius:9px; background:conic-gradient(from 210deg, var(--iom-blue), var(--iom-blue-accent)); box-shadow:0 0 0 2px #0b1223, 0 6px 18px rgba(65,143,222,.25)}
-    .brand h1{font-size:18px; margin:0; font-weight:800; letter-spacing:.2px}
-    .sub{font-size:12px; color:var(--muted); font-weight:500}
 
-    main{max-width:1400px; margin:18px auto; padding:0 16px 80px}
-
-    /* Filters */
-    .filters{display:grid; grid-template-columns:repeat(12,1fr); gap:12px; margin:16px 0 10px}
-    .filter{
-      grid-column: span 3;
-      background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:10px 12px;
+    #loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
-    .filter label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px}
-    .filter select, .filter input{
-      width:100%; background:var(--chip); color:var(--text); border:1px solid var(--border);
-      padding:8px 10px; border-radius:10px; outline:none;
+
+    .loader {
+      position: relative;
+      width: 75px;
+      height: 100px;
     }
-    .filter small{display:block; color:var(--muted); margin-top:6px}
-    .controls{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    .btn{background:var(--iom-blue-accent); color:#fff; border:0; padding:9px 12px; border-radius:10px; cursor:pointer; font-weight:600}
-    .btn.secondary{background:#1f2937}
-    .btn.ghost{background:transparent; border:1px solid var(--border)}
 
-    /* KPI cards */
-    .kpis{display:grid; grid-template-columns:repeat(12,1fr); gap:12px; margin:14px 0 24px}
-    .kpi{grid-column:span 4; background:linear-gradient(180deg, #0b1223, #0f172a); border:1px solid var(--border); border-radius:16px; padding:14px; position:relative; overflow:hidden}
-    .kpi h3{margin:0; font-size:12px; color:var(--muted); font-weight:600}
-    .kpi .value{font-size:28px; font-weight:800; margin-top:6px}
-    .kpi .badge{position:absolute; right:12px; top:12px; background:var(--chip); color:var(--muted); padding:4px 8px; border-radius:999px; font-size:11px; border:1px solid var(--border)}
-
-    /* Grid sections */
-    .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
-    .card{grid-column:span 6; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px}
-    .card h4{margin:0 0 8px; font-size:14px; font-weight:800}
-    .card .subtle{font-size:12px; color:var(--muted); margin-left:6px}
-    .card .chart{height:280px}
-
-    .footer{margin-top:28px; color:var(--muted); font-size:12px; text-align:center}
-
-    @media (max-width: 1100px){
-      .filter{grid-column:span 6}
-      .kpi{grid-column:span 6}
-      .card{grid-column:span 12}
+    .loader__bar {
+      position: absolute;
+      bottom: 0;
+      width: 10px;
+      height: 50%;
+      background: #1e3a8a;
+      transform-origin: center bottom;
+      box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
     }
-    @media (max-width: 640px){
-      .filter{grid-column:span 12}
+
+    .loader__bar:nth-child(1) { left: 0px; transform: scale(1, 0.2); animation: barUp1 4s infinite; }
+    .loader__bar:nth-child(2) { left: 15px; transform: scale(1, 0.4); animation: barUp2 4s infinite; }
+    .loader__bar:nth-child(3) { left: 30px; transform: scale(1, 0.6); animation: barUp3 4s infinite; }
+    .loader__bar:nth-child(4) { left: 45px; transform: scale(1, 0.8); animation: barUp4 4s infinite; }
+    .loader__bar:nth-child(5) { left: 60px; transform: scale(1, 1); animation: barUp5 4s infinite; }
+
+    .loader__ball {
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      width: 10px;
+      height: 10px;
+      background: #3b82f6;
+      border-radius: 50%;
+      animation: ball624 4s infinite;
+    }
+
+    /* ====== Loader Animations ====== */
+    @keyframes ball624 {
+      0% { transform: translate(0, 0); }
+      40% { transform: translate(60px, -40px); }
+      50% { transform: translate(60px, 0); }
+      90% { transform: translate(0, -40px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    @keyframes barUp1 {
+      0%, 40% { transform: scale(1, 0.2); }
+      50%, 90% { transform: scale(1, 1); }
+      100% { transform: scale(1, 0.2); }
+    }
+
+    @keyframes barUp2 {
+      0%, 40% { transform: scale(1, 0.4); }
+      50%, 90% { transform: scale(1, 0.8); }
+      100% { transform: scale(1, 0.4); }
+    }
+
+    @keyframes barUp3 { 0%, 100% { transform: scale(1, 0.6); } }
+    @keyframes barUp4 {
+      0%, 40% { transform: scale(1, 0.8); }
+      50%, 90% { transform: scale(1, 0.4); }
+      100% { transform: scale(1, 0.8); }
+    }
+
+    @keyframes barUp5 {
+      0%, 40% { transform: scale(1, 1); }
+      50%, 90% { transform: scale(1, 0.2); }
+      100% { transform: scale(1, 1); }
+    }
+
+    /* ===== Dashboard Grid ===== */
+    .content-wrapper {
+      display: none;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    .content-wrapper.visible {
+      display: block;
+      opacity: 1;
+      overflow-y: auto;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 30px;
+      width: 100%;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      position: relative;
+      height: 300px;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      background: transparent;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 25px 25px 70px #b0b0b0, -25px -25px 70px #ffffff;
+    }
+
+    .bg {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: calc(100% - 10px);
+      height: calc(100% - 10px);
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(24px);
+      border-radius: 10px;
+      overflow: hidden;
+      outline: 2px solid white;
+    }
+
+    .blob {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      opacity: 0.8;
+      filter: blur(14px);
+      animation: blob-bounce 5s infinite ease-in-out;
+    }
+
+    .blob.red { background-color: #ef4444; }
+    .blob.blue { background-color: #3b82f6; }
+    .blob.green { background-color: #22c55e; }
+    .blob.orange { background-color: #f59e0b; }
+    .blob.purple { background-color: #8b5cf6; }
+
+    @keyframes blob-bounce {
+      0%   { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
+      25%  { transform: translate(-100%, -100%) translate3d(100%, 0, 0); }
+      50%  { transform: translate(-100%, -100%) translate3d(100%, 100%, 0); }
+      75%  { transform: translate(-100%, -100%) translate3d(0, 100%, 0); }
+      100% { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
+    }
+
+    .content {
+      z-index: 3;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      margin: 10px auto;
+      color: #1e293b;
+    }
+
+    .counter {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #1e3a8a;
+      margin-bottom: 10px;
+    }
+
+    .content h3 {
+      font-size: 1.1rem;
+      color: #111827;
+      margin-bottom: 5px;
+    }
+
+    .content p {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+
+    /* ====== Refresh Button (Uiverse by StealthWorm) ====== */
+    .btn {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 13rem;
+      overflow: hidden;
+      height: 3rem;
+      margin: 40px auto;
+      background-size: 300% 300%;
+      cursor: pointer;
+      backdrop-filter: blur(1rem);
+      border-radius: 5rem;
+      transition: 0.5s;
+      animation: gradient_301 5s ease infinite;
+      border: double 4px transparent;
+      background-image: linear-gradient(#212121, #212121),
+        linear-gradient(137.48deg, #ffdb3b 10%, #fe53bb 45%, #8f51ea 67%, #0044ff 87%);
+      background-origin: border-box;
+      background-clip: content-box, border-box;
+      position: relative;
+    }
+
+    #container-stars {
+      position: absolute;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border-radius: 5rem;
+    }
+
+    strong {
+      z-index: 2;
+      letter-spacing: 5px;
+      color: #ffffff;
+      font-size: 13px;
+      text-shadow: 0 0 4px white;
+    }
+
+    #glow {
+      position: absolute;
+      display: flex;
+      width: 12rem;
+    }
+
+    .circle {
+      width: 100%;
+      height: 30px;
+      filter: blur(2rem);
+      animation: pulse_3011 4s infinite;
+      z-index: -1;
+    }
+
+    .circle:nth-of-type(1) { background: rgba(254, 83, 186, 0.636); }
+    .circle:nth-of-type(2) { background: rgba(142, 81, 234, 0.704); }
+
+    @keyframes gradient_301 {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes pulse_3011 {
+      0% { transform: scale(0.75); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+      100% { transform: scale(0.75); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.4rem; }
+      .counter { font-size: 1.3rem; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Sudan — Mobility Flow Monitoring</h1>
-          <div class="sub">Indicative dashboard for FMC (flows) + FMS (survey). Configurable to your CSVs.</div>
-        </div>
+
+  <!-- ====== Loader Section ====== -->
+  <div id="loading-screen">
+    <div class="loader">
+      <div class="loader__bar"></div><div class="loader__bar"></div>
+      <div class="loader__bar"></div><div class="loader__bar"></div>
+      <div class="loader__bar"></div><div class="loader__ball"></div>
+    </div>
+    <p style="color:#1e3a8a; margin-top:20px;">Loading dashboard data...</p>
+  </div>
+
+  <!-- ====== Main Dashboard ====== -->
+  <div class="content-wrapper" id="dashboard">
+    <h1>Sudan Mobility Flow Monitoring Dashboard</h1>
+
+    <div class="card-grid">
+      <a href="total-flows.html" class="card"><div class="blob red"></div><div class="bg"></div>
+        <div class="content"><i data-lucide="activity" class="icon"></i>
+          <div class="counter" data-target="150230">0</div><h3>Total Flows</h3>
+          <p>All recorded entries and exits across monitored border points.</p></div></a>
+
+      <a href="inflow.html" class="card"><div class="blob blue"></div><div class="bg"></div>
+        <div class="content"><i data-lucide="arrow-down-circle" class="icon"></i>
+          <div class="counter" data-target="80210">0</div><h3>Total Inflows</h3>
+          <p>Incoming movements and arrivals per crossing location.</p></div></a>
+
+      <a href="outflow.html" class="card"><div class="blob green"></div><div class="bg"></div>
+        <div class="content"><i data-lucide="arrow-up-circle" class="icon"></i>
+          <div class="counter" data-target="70020">0</div><h3>Total Outflows</h3>
+          <p>Outgoing individuals and departures disaggregated by border.</p></div></a>
+
+      <a href="demographics.html" class="card"><div class="blob orange"></div><div class="bg"></div>
+        <div class="content"><i data-lucide="users" class="icon"></i>
+          <div class="counter" data-target="25340">0</div><h3>Demographics</h3>
+          <p>Age, gender, and nationality breakdown of surveyed travelers.</p></div></a>
+
+      <a href="transport.html" class="card"><div class="blob purple"></div><div class="bg"></div>
+        <div class="content"><i data-lucide="map-pin" class="icon"></i>
+          <div class="counter" data-target="125">0</div><h3>Transport & Routes</h3>
+          <p>Main modes of travel and common migration routes across CBPs.</p></div></a>
+    </div>
+
+    <!-- ====== Refresh Button ====== -->
+    <div class="btn" id="refresh-btn">
+      <div id="container-stars">
+        <div id="stars"></div>
       </div>
-      <div class="controls" style="margin-left:auto">
-        <button id="btn-export" class="btn ghost" title="Export current aggregates (CSV)"><i class="fa-solid fa-file-arrow-down"></i>&nbsp;Export CSV</button>
-        <button id="btn-reset" class="btn secondary" title="Reset filters"><i class="fa-solid fa-rotate"></i>&nbsp;Reset</button>
+      <strong>REFRESH DATA</strong>
+      <div id="glow">
+        <div class="circle"></div><div class="circle"></div>
       </div>
     </div>
-  </header>
+  </div>
 
-  <main>
-    <!-- ========== FILTERS ========== -->
-    <section class="filters" id="filters">
-      <div class="filter"><label>CBP</label>
-        <select id="f-cbp"></select>
-      </div>
-      <div class="filter"><label>Direction</label>
-        <select id="f-direction">
-          <option value="all">All</option>
-          <option value="incoming">Incoming</option>
-          <option value="outgoing">Outgoing</option>
-        </select>
-      </div>
-      <div class="filter"><label>Nationality</label>
-        <select id="f-nationality"></select>
-      </div>
-      <div class="filter"><label>Gender</label>
-        <select id="f-gender"></select>
-      </div>
-      <div class="filter"><label>Date From</label>
-        <input id="f-date-from" type="date" />
-        <small id="f-date-from-summary"></small>
-      </div>
-      <div class="filter"><label>Date To</label>
-        <input id="f-date-to" type="date" />
-        <small id="f-date-to-summary"></small>
-      </div>
-      <div class="filter" style="grid-column:span 12">
-        <label style="display:flex;align-items:center;gap:8px">Quick filters
-          <span class="subtle">(applies to all cards)</span></label>
-        <div class="controls">
-          <button class="btn" id="btn-apply">Apply</button>
-          <button class="btn ghost" id="btn-last30">Last 30 days</button>
-          <button class="btn ghost" id="btn-thisMonth">This month</button>
-          <button class="btn ghost" id="btn-clearDates">Clear dates</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ========== KPIs ========== -->
-    <section class="kpis">
-      <div class="kpi" id="kpi-total">
-        <div class="badge">Total flows</div>
-        <h3>All directions</h3>
-        <div class="value" id="kpi-total-value">0</div>
-      </div>
-      <div class="kpi" id="kpi-in">
-        <div class="badge">Inflow</div>
-        <h3>Incoming</h3>
-        <div class="value" id="kpi-in-value">0</div>
-      </div>
-      <div class="kpi" id="kpi-out">
-        <div class="badge">Outflow</div>
-        <h3>Outgoing</h3>
-        <div class="value" id="kpi-out-value">0</div>
-      </div>
-    </section>
-
-    <!-- ========== CHARTS GRID ========== -->
-    <section class="grid" id="charts-grid">
-      <div class="card" style="grid-column:span 12">
-        <h4>Timeline <span class="subtle">(daily totals, split by direction)</span></h4>
-        <canvas id="chart_timeline" class="chart"></canvas>
-      </div>
-
-      <div class="card">
-        <h4>Gender</h4>
-        <canvas id="chart_gender" class="chart"></canvas>
-      </div>
-      <div class="card">
-        <h4>Age groups</h4>
-        <canvas id="chart_age" class="chart"></canvas>
-      </div>
-
-      <div class="card">
-        <h4>Transport</h4>
-        <canvas id="chart_transport" class="chart"></canvas>
-      </div>
-      <div class="card">
-        <h4>Nationality (Top 10)</h4>
-        <canvas id="chart_nationality" class="chart"></canvas>
-      </div>
-
-      <div class="card">
-        <h4>Documents possessed (Top 10)</h4>
-        <canvas id="chart_documents" class="chart"></canvas>
-      </div>
-      <div class="card">
-        <h4>Vulnerabilities (Top 10)</h4>
-        <canvas id="chart_vulnerability" class="chart"></canvas>
-      </div>
-
-      <div class="card">
-        <h4>State of origin (Top 10)</h4>
-        <canvas id="chart_state_origin" class="chart"></canvas>
-      </div>
-      <div class="card">
-        <h4>Destination (Top 10)</h4>
-        <canvas id="chart_destination" class="chart"></canvas>
-      </div>
-
-      <div class="card">
-        <h4>Main reasons to leave Sudan (Top 10)</h4>
-        <canvas id="chart_reason_leave" class="chart"></canvas>
-      </div>
-      <div class="card">
-        <h4>Reasons to travel back to Sudan (Top 10)</h4>
-        <canvas id="chart_reason_return" class="chart"></canvas>
-      </div>
-
-      <div class="card" style="grid-column:span 12">
-        <h4>Movement intentions in the next 3 months</h4>
-        <canvas id="chart_intentions" class="chart"></canvas>
-      </div>
-    </section>
-
-    <div class="footer" id="footer">Ready. Load your CSVs in <code>/data</code> then refresh.</div>
-  </main>
-
-  <!-- ======== APP SCRIPT ======== -->
   <script>
-    /* =============================================================
-       README / HOW TO USE
-       -------------------------------------------------------------
-       1) Place two CSV files inside your repo's /data folder:
-          - flows.csv   (FMC counts)
-          - survey.csv  (FMS interviews)
+    lucide.createIcons();
 
-          You can rename them in CONFIG.paths below.
-
-       2) Expected columns (auto-detection is included for common names):
-          FLOWS (FMC):
-            date, cbp (or CBP Name), direction (incoming/outgoing), volume
-          SURVEY (FMS):
-            date, cbp, direction, gender, age, transport, nationality,
-            documents (multi-select), vulnerability (multi-select),
-            state_origin, reason_leave, reason_return, intentions, destination
-
-          Multi-select answers can be numeric codes spaced like "1 3 5"
-          or labels like "Passport National ID". A mapping for documents is
-          included below.
-
-       3) Open index.html via a local server (needed to fetch CSV):
-            python -m http.server 8000
-            # then visit http://localhost:8000
-
-       4) On GitHub Pages, ensure CSV files are at /data/*.csv
-
-       5) If your column names differ, extend the SYNONYMS map below
-          or set explicit names in CONFIG.columns.
-       ============================================================= */
-
-    const CONFIG = {
-      paths: {
-        flows: 'data/flows.csv',
-        survey: 'data/survey.csv'
-      },
-      columns: {
-        flows: { date:'', cbp:'', direction:'', volume:'' }, // leave blank for autodetect
-        survey:{
-          date:'', cbp:'', direction:'', gender:'', age:'', transport:'', nationality:'',
-          documents:'', vulnerability:'', state_origin:'', reason_leave:'', reason_return:'', intentions:'', destination:''
+    // Counter animation function
+    function animateCounter(counter, newTarget) {
+      const target = +newTarget;
+      const count = +counter.innerText.replace(/,/g, "");
+      const increment = (target - count) / 50;
+      const updateCount = () => {
+        const current = +counter.innerText.replace(/,/g, "");
+        if ((increment > 0 && current < target) || (increment < 0 && current > target)) {
+          counter.innerText = Math.floor(current + increment).toLocaleString();
+          requestAnimationFrame(updateCount);
+        } else {
+          counter.innerText = target.toLocaleString();
         }
-      },
-      multi: {
-        delimiter: /[;,|\s]+/, // split on space/comma/semicolon/pipe
-        documentsMap: { // numeric -> label mapping (edit as needed)
-          '1':'Passport','2':'National ID','3':'Birth certificate(s)','4':'Refugee card','5':'Proof of registration','6':'Asylum seeker certificate','7':'None'
-        }
-      }
-    };
-
-    const SYNONYMS = {
-      date:['date','submission_date','submissiondate','end','_submission_time','_submission_time_utc','Start','start','visit_date','interview_date','collection_date'],
-      cbp:['cbp','cbp_name','CBP Name','borderpoint','border_point','border point','Cross border Name','Cross-border Name','bp_name'],
-      direction:['direction','dircation','flow_direction','inout','incoming_outgoing','dir'],
-      volume:['volume','count','flows','flow','n','total','total_flow','Daily count','Daily flow'],
-      gender:['gender','sex','respondent_gender','sex_of_respondent'],
-      age:['age','resp_age','respondent_age','age_group','agegroup'],
-      transport:['transport','mode','mode_of_transport','Transport used'],
-      nationality:['nationality','nat','country_of_citizenship'],
-      documents:['documents','docs','Which of the following documents do you currently possess? (Select all that apply)','docs_possessed','doc_possessed'],
-      vulnerability:['vulnerability','vulnerabilities','vuln','specific_vulnerabilities'],
-      state_origin:['state_origin','state of origin','origin_state','State of Origin','state'],
-      reason_leave:['reason_leave','main reasons for you to leave Sudan','reason to leave','push_factors'],
-      reason_return:['reason_return','reasons to travel back to sudan','pull_factors_return'],
-      intentions:['intentions','movement intentions in the next three months','movement intentions'],
-      destination:['destination','intended_destination','dest','where are you going','final_destination']
-    };
-
-    // Global state
-    const State = {
-      flowsRaw: [],
-      surveyRaw: [],
-      flows: [],
-      survey: [],
-      cols: {flows:{}, survey:{}},
-      filters: { cbp:'all', direction:'all', nationality:'all', gender:'all', from:'', to:'' },
-      charts: {}
-    };
-
-    // Utils
-    const fmtInt = n => (isFinite(n) ? n.toLocaleString('en-GB') : '0');
-    const toDate = v => {
-      if (!v) return null;
-      const d = new Date(v);
-      return isNaN(d) ? null : d;
-    };
-    const ymd = d => d.toISOString().slice(0,10);
-    const norm = v => (v==null? '': String(v).trim());
-    const canon = v => norm(v).toLowerCase();
-
-    function detectColumns(rows, wanted){
-      if (!rows.length) return {};
-      const headers = Object.keys(rows[0]);
-      const map = {};
-      for (const key in wanted){
-        const syns = SYNONYMS[key]||[];
-        const explicit = CONFIG.columns[wanted === CONFIG.columns.flows ? 'flows':'survey'][key];
-        if (explicit) { map[key]=explicit; continue; }
-        // exact match first
-        let found = headers.find(h => canon(h)===canon(key));
-        if (!found){
-          for (const s of syns){
-            found = headers.find(h => canon(h)===canon(s) || canon(h).includes(canon(s)));
-            if (found) break;
-          }
-        }
-        map[key] = found || '';
-      }
-      return map;
-    }
-
-    function normalizeFlows(rows, cols){
-      const out = [];
-      for (const r of rows){
-        const d = toDate(r[cols.date]);
-        if (!d) continue;
-        const dirRaw = canon(r[cols.direction]);
-        const direction = dirRaw.includes('out')? 'outgoing' : (dirRaw.includes('in')? 'incoming' : (dirRaw === '2' ? 'outgoing' : (dirRaw === '1' ? 'incoming' : 'unknown')));
-        const volume = Number(r[cols.volume]) || 0;
-        const cbp = norm(r[cols.cbp])||'Unknown CBP';
-        out.push({date:d, direction, volume, cbp});
-      }
-      return out;
-    }
-
-    function normalizeSurvey(rows, cols){
-      const out = [];
-      for (const r of rows){
-        const d = toDate(r[cols.date] || r[cols.date]?.split('T')[0]);
-        if (!d) continue;
-        const cbp = norm(r[cols.cbp])||'Unknown CBP';
-        const direction = canon(r[cols.direction]).includes('out')? 'outgoing' : (canon(r[cols.direction]).includes('in')? 'incoming' : 'unknown');
-        const gender = tidyLabel(r[cols.gender]);
-        const age = tidyLabel(r[cols.age]);
-        const transport = tidyLabel(r[cols.transport]);
-        const nationality = tidyLabel(r[cols.nationality]);
-        const documents = splitMulti(r[cols.documents]).map(tidyLabel);
-        const vulnerability = splitMulti(r[cols.vulnerability]).map(tidyLabel);
-        const state_origin = tidyLabel(r[cols.state_origin]);
-        const reason_leave = splitMulti(r[cols.reason_leave]).map(tidyLabel);
-        const reason_return = splitMulti(r[cols.reason_return]).map(tidyLabel);
-        const intentions = tidyLabel(r[cols.intentions]);
-        const destination = tidyLabel(r[cols.destination]);
-        out.push({date:d, cbp, direction, gender, age, transport, nationality, documents, vulnerability, state_origin, reason_leave, reason_return, intentions, destination});
-      }
-      return out;
-    }
-
-    function tidyLabel(v){
-      const s = norm(v);
-      if (!s) return 'Unknown';
-      // Map numeric docs codes to labels when column is documents (handled separately for multi)
-      return toTitle(s.replace(/_/g,' '));
-    }
-    function toTitle(s){
-      return s.toLowerCase().replace(/\b\w/g, c=>c.toUpperCase());
-    }
-    function splitMulti(v){
-      if (!v) return [];
-      const raw = String(v).trim();
-      if (!raw) return [];
-      const parts = raw.split(CONFIG.multi.delimiter).filter(Boolean);
-      // Map numeric codes for documents specifically
-      return parts.map(p => CONFIG.multi.documentsMap[p] || p);
-    }
-
-    function applyFilters(){
-      const {cbp, direction, nationality, gender, from, to} = State.filters;
-      const dateIn = d => (!from || d>=from) && (!to || d<=to);
-
-      State.flows = State.flowsRaw.filter(r => dateIn(r.date) && (cbp==='all'||r.cbp===cbp) && (direction==='all'||r.direction===direction));
-
-      State.survey = State.surveyRaw.filter(r => dateIn(r.date) && (cbp==='all'||r.cbp===cbp) && (direction==='all'||r.direction===direction)
-        && (nationality==='all'||r.nationality===nationality) && (gender==='all'||r.gender===gender));
-    }
-
-    function uniq(arr){ return [...new Set(arr)]; }
-
-    function groupSum(arr, keyFn, valFn){
-      const map = new Map();
-      for (const a of arr){
-        const k = keyFn(a);
-        const v = valFn(a);
-        map.set(k, (map.get(k)||0) + v);
-      }
-      return Array.from(map, ([k,v])=>({key:k, value:v}))
-                  .sort((a,b)=> b.value-a.value);
-    }
-
-    function groupCount(arr, keyFn){
-      return groupSum(arr, keyFn, _=>1);
-    }
-
-    function countMulti(arr, key){
-      const map = new Map();
-      for (const a of arr){
-        const items = a[key]||[];
-        for (const it of items){
-          const label = tidyLabel(it);
-          map.set(label, (map.get(label)||0)+1);
-        }
-      }
-      return Array.from(map, ([k,v])=>({key:k, value:v})).sort((a,b)=>b.value-a.value);
-    }
-
-    // ---------- Charts ----------
-    function ensureChart(id, type, data, options){
-      const el = document.getElementById(id);
-      if (State.charts[id]){
-        State.charts[id].data = data;
-        State.charts[id].options = options || State.charts[id].options;
-        State.charts[id].update();
-        return State.charts[id];
-      }
-      const ctx = el.getContext('2d');
-      const chart = new Chart(ctx, {type, data, options});
-      State.charts[id] = chart;
-      return chart;
-    }
-
-    function palette(n){
-      // Let Chart.js pick defaults; here we just produce n placeholders if needed.
-      return Array.from({length:n}, (_,i)=>undefined);
-    }
-
-    function updateKpis(){
-      const total = State.flows.reduce((s,r)=>s+r.volume,0);
-      const inSum = State.flows.filter(r=>r.direction==='incoming').reduce((s,r)=>s+r.volume,0);
-      const outSum = State.flows.filter(r=>r.direction==='outgoing').reduce((s,r)=>s+r.volume,0);
-      document.getElementById('kpi-total-value').textContent = fmtInt(total);
-      document.getElementById('kpi-in-value').textContent = fmtInt(inSum);
-      document.getElementById('kpi-out-value').textContent = fmtInt(outSum);
-    }
-
-    function updateTimeline(){
-      const byDayIn = groupSum(State.flows.filter(r=>r.direction==='incoming'), r=>ymd(r.date), r=>r.volume);
-      const byDayOut= groupSum(State.flows.filter(r=>r.direction==='outgoing'), r=>ymd(r.date), r=>r.volume);
-      const labels = uniq([...byDayIn.map(d=>d.key), ...byDayOut.map(d=>d.key)]).sort();
-      const mapIn = new Map(byDayIn.map(d=>[d.key,d.value]));
-      const mapOut= new Map(byDayOut.map(d=>[d.key,d.value]));
-      const dsIn = labels.map(l=>mapIn.get(l)||0);
-      const dsOut= labels.map(l=>mapOut.get(l)||0);
-      ensureChart('chart_timeline','line',{
-        labels,
-        datasets:[
-          {label:'Incoming', data:dsIn, tension:.2, fill:false},
-          {label:'Outgoing', data:dsOut, tension:.2, fill:false}
-        ]
-      },{
-        responsive:true,
-        plugins:{ legend:{position:'top'}, tooltip:{mode:'index', intersect:false}},
-        interaction:{mode:'index', intersect:false},
-        scales:{ x:{ grid:{display:false}}, y:{ beginAtZero:true} }
-      });
-    }
-
-    function topN(arr,n=10){ return arr.slice(0,n); }
-
-    function updateCharts(){
-      // Gender
-      const gender = groupCount(State.survey, r=>r.gender);
-      ensureChart('chart_gender','doughnut',{
-        labels: gender.map(d=>d.key),
-        datasets:[{data:gender.map(d=>d.value)}]
-      },{plugins:{legend:{position:'bottom'}}});
-
-      // Age
-      const age = groupCount(State.survey, r=>r.age);
-      ensureChart('chart_age','bar',{
-        labels: age.map(d=>d.key),
-        datasets:[{label:'Respondents', data:age.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-
-      // Transport
-      const transport = groupCount(State.survey, r=>r.transport);
-      ensureChart('chart_transport','bar',{
-        labels: transport.map(d=>d.key),
-        datasets:[{label:'Respondents', data:transport.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-
-      // Nationality
-      const nationality = topN(groupCount(State.survey, r=>r.nationality));
-      ensureChart('chart_nationality','bar',{
-        labels: nationality.map(d=>d.key),
-        datasets:[{label:'Respondents', data:nationality.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-
-      // Documents (multi)
-      const documents = topN(countMulti(State.survey,'documents'));
-      ensureChart('chart_documents','bar',{
-        labels: documents.map(d=>d.key),
-        datasets:[{label:'Responses', data:documents.map(d=>d.value)}]
-      },{indexAxis:'y', scales:{x:{beginAtZero:true}}});
-
-      // Vulnerability (multi)
-      const vulnerability = topN(countMulti(State.survey,'vulnerability'));
-      ensureChart('chart_vulnerability','bar',{
-        labels: vulnerability.map(d=>d.key),
-        datasets:[{label:'Responses', data:vulnerability.map(d=>d.value)}]
-      },{indexAxis:'y', scales:{x:{beginAtZero:true}}});
-
-      // State of origin
-      const origin = topN(groupCount(State.survey, r=>r.state_origin));
-      ensureChart('chart_state_origin','bar',{
-        labels: origin.map(d=>d.key),
-        datasets:[{label:'Respondents', data:origin.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-
-      // Destination
-      const dest = topN(groupCount(State.survey, r=>r.destination));
-      ensureChart('chart_destination','bar',{
-        labels: dest.map(d=>d.key),
-        datasets:[{label:'Respondents', data:dest.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-
-      // Reasons leave/return (multi)
-      const rLeave = topN(countMulti(State.survey,'reason_leave'));
-      ensureChart('chart_reason_leave','bar',{
-        labels: rLeave.map(d=>d.key),
-        datasets:[{label:'Mentions', data:rLeave.map(d=>d.value)}]
-      },{indexAxis:'y', scales:{x:{beginAtZero:true}}});
-
-      const rReturn = topN(countMulti(State.survey,'reason_return'));
-      ensureChart('chart_reason_return','bar',{
-        labels: rReturn.map(d=>d.key),
-        datasets:[{label:'Mentions', data:rReturn.map(d=>d.value)}]
-      },{indexAxis:'y', scales:{x:{beginAtZero:true}}});
-
-      // Intentions
-      const intent = groupCount(State.survey, r=>r.intentions);
-      ensureChart('chart_intentions','bar',{
-        labels: intent.map(d=>d.key),
-        datasets:[{label:'Respondents', data:intent.map(d=>d.value)}]
-      },{scales:{y:{beginAtZero:true}}});
-    }
-
-    function setFilterOptions(){
-      const cbps = ['all', ...uniq(State.flowsRaw.map(r=>r.cbp).concat(State.surveyRaw.map(r=>r.cbp))).filter(Boolean)];
-      fillSelect('f-cbp', cbps);
-
-      const nats = ['all', ...uniq(State.surveyRaw.map(r=>r.nationality)).filter(Boolean)];
-      fillSelect('f-nationality', nats);
-
-      const genders = ['all', ...uniq(State.surveyRaw.map(r=>r.gender)).filter(Boolean)];
-      fillSelect('f-gender', genders);
-
-      const dates = uniq(State.flowsRaw.map(r=>ymd(r.date)).concat(State.surveyRaw.map(r=>ymd(r.date)))).sort();
-      if (dates.length){
-        const min = dates[0], max = dates[dates.length-1];
-        const fFrom = document.getElementById('f-date-from');
-        const fTo = document.getElementById('f-date-to');
-        fFrom.min=min; fFrom.max=max; fTo.min=min; fTo.max=max; fFrom.value=''; fTo.value='';
-        document.getElementById('f-date-from-summary').textContent = `min ${min}`;
-        document.getElementById('f-date-to-summary').textContent = `max ${max}`;
-      }
-    }
-
-    function fillSelect(id, options){
-      const el = document.getElementById(id);
-      el.innerHTML = '';
-      for (const opt of options){
-        const o = document.createElement('option');
-        o.value = opt; o.textContent = toTitle(String(opt));
-        el.appendChild(o);
-      }
-      el.value = options[0];
-    }
-
-    function readFilters(){
-      const cbp = document.getElementById('f-cbp').value;
-      const direction = document.getElementById('f-direction').value;
-      const nationality = document.getElementById('f-nationality').value;
-      const gender = document.getElementById('f-gender').value;
-      const fromRaw = document.getElementById('f-date-from').value;
-      const toRaw = document.getElementById('f-date-to').value;
-      State.filters = {
-        cbp, direction, nationality, gender,
-        from: fromRaw? new Date(fromRaw+'T00:00:00Z'): '',
-        to: toRaw? new Date(toRaw+'T23:59:59Z'): ''
       };
+      updateCount();
     }
 
-    function exportAggregates(){
-      // Build a simple CSV with key aggregates from current selection
-      const total = State.flows.reduce((s,r)=>s+r.volume,0);
-      const byDir = groupSum(State.flows, r=>r.direction, r=>r.volume);
-      const gender = groupCount(State.survey, r=>r.gender);
-      const age = groupCount(State.survey, r=>r.age);
-      const transport = groupCount(State.survey, r=>r.transport);
-      const nationality = groupCount(State.survey, r=>r.nationality);
+    const counters = document.querySelectorAll(".counter");
+    counters.forEach(c => animateCounter(c, c.getAttribute("data-target")));
 
-      let csv = 'Metric,Category,Value\n';
-      csv += `Total flows,All,${total}\n`;
-      for (const d of byDir) csv += `Flows by direction,${d.key},${d.value}\n`;
-      for (const d of gender) csv += `Gender,${d.key},${d.value}\n`;
-      for (const d of age) csv += `Age,${d.key},${d.value}\n`;
-      for (const d of transport) csv += `Transport,${d.key},${d.value}\n`;
-      for (const d of nationality) csv += `Nationality,${d.key},${d.value}\n`;
-
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href=url; a.download=`aggregates_${Date.now()}.csv`; a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    async function loadCsv(path){
-      return new Promise((resolve, reject) => {
-        Papa.parse(path, {
-          header:true, dynamicTyping:false, skipEmptyLines:true, download:true,
-          complete: results => resolve(results.data),
-          error: err => reject(err)
-        });
+    // Auto refresh counters every 10s
+    setInterval(() => {
+      counters.forEach(counter => {
+        const baseValue = +counter.getAttribute("data-target");
+        const randomChange = Math.floor(Math.random() * 500 - 250);
+        const newTarget = Math.max(0, baseValue + randomChange);
+        counter.setAttribute("data-target", newTarget);
+        animateCounter(counter, newTarget);
       });
-    }
+    }, 10000);
 
-    function footer(msg){ document.getElementById('footer').textContent = msg; }
-
-    async function init(){
-      footer('Loading CSVs…');
-      try {
-        const [flowsRaw, surveyRaw] = await Promise.all([
-          loadCsv(CONFIG.paths.flows).catch(()=>[]),
-          loadCsv(CONFIG.paths.survey).catch(()=>[])
-        ]);
-        if (!flowsRaw.length && !surveyRaw.length){
-          footer('No data found. Please add /data/flows.csv and /data/survey.csv');
-          return;
-        }
-
-        // Detect columns
-        const flowsCols = detectColumns(flowsRaw, CONFIG.columns.flows);
-        const surveyCols= detectColumns(surveyRaw, CONFIG.columns.survey);
-        State.cols.flows = flowsCols; State.cols.survey = surveyCols;
-
-        // Normalize
-        State.flowsRaw = normalizeFlows(flowsRaw, {date:flowsCols.date||guess('date', flowsRaw), cbp:flowsCols.cbp||guess('cbp', flowsRaw), direction:flowsCols.direction||guess('direction', flowsRaw), volume:flowsCols.volume||guess('volume', flowsRaw)});
-        State.surveyRaw= normalizeSurvey(surveyRaw, {date:surveyCols.date||guess('date', surveyRaw), cbp:surveyCols.cbp||guess('cbp', surveyRaw), direction:surveyCols.direction||guess('direction', surveyRaw), gender:surveyCols.gender||guess('gender', surveyRaw), age:surveyCols.age||guess('age', surveyRaw), transport:surveyCols.transport||guess('transport', surveyRaw), nationality:surveyCols.nationality||guess('nationality', surveyRaw), documents:surveyCols.documents||guess('documents', surveyRaw), vulnerability:surveyCols.vulnerability||guess('vulnerability', surveyRaw), state_origin:surveyCols.state_origin||guess('state_origin', surveyRaw), reason_leave:surveyCols.reason_leave||guess('reason_leave', surveyRaw), reason_return:surveyCols.reason_return||guess('reason_return', surveyRaw), intentions:surveyCols.intentions||guess('intentions', surveyRaw), destination:surveyCols.destination||guess('destination', surveyRaw)});
-
-        // If flows missing, derive from survey counts (unweighted)
-        if (!State.flowsRaw.length && State.surveyRaw.length){
-          const byDayDir = groupSum(State.surveyRaw, r=>ymd(r.date)+"|"+r.direction, _=>1);
-          State.flowsRaw = byDayDir.map(d=>{
-            const [day, dir] = d.key.split('|');
-            return {date:new Date(day), direction:dir, volume:d.value, cbp:'All CBPs'};
-          });
-        }
-
-        setFilterOptions();
-        readFilters();
-        applyFilters();
-        updateKpis();
-        updateTimeline();
-        updateCharts();
-        footer(`Loaded ${fmtInt(State.flowsRaw.length)} flow rows & ${fmtInt(State.surveyRaw.length)} survey rows · Updated ${new Date().toLocaleString()}`);
-      } catch (e){
-        console.error(e);
-        footer('Error loading data. Open Console for details.');
-      }
-    }
-
-    function guess(key, rows){
-      const headers = rows.length? Object.keys(rows[0]) : [];
-      const syn = SYNONYMS[key]||[];
-      const all = [key, ...syn];
-      const found = headers.find(h => all.some(s => canon(h)===canon(s) || canon(h).includes(canon(s))));
-      return found || '';
-    }
-
-    // Events
-    document.getElementById('btn-apply').addEventListener('click', ()=>{ readFilters(); applyFilters(); updateKpis(); updateTimeline(); updateCharts(); });
-    document.getElementById('btn-reset').addEventListener('click', ()=>{
-      State.filters = {cbp:'all', direction:'all', nationality:'all', gender:'all', from:'', to:''};
-      setFilterOptions(); readFilters(); applyFilters(); updateKpis(); updateTimeline(); updateCharts();
+    // Refresh button functionality
+    document.getElementById("refresh-btn").addEventListener("click", () => {
+      const loader = document.getElementById("loading-screen");
+      loader.classList.remove("hidden");
+      setTimeout(() => {
+        loader.classList.add("hidden");
+        counters.forEach(counter => {
+          const baseValue = +counter.getAttribute("data-target");
+          const randomChange = Math.floor(Math.random() * 800 - 400);
+          const newTarget = Math.max(0, baseValue + randomChange);
+          counter.setAttribute("data-target", newTarget);
+          animateCounter(counter, newTarget);
+        });
+      }, 2000);
     });
-    document.getElementById('btn-last30').addEventListener('click', ()=>{
-      const to = new Date(); const from = new Date(Date.now()-29*24*3600*1000);
-      document.getElementById('f-date-from').value = ymd(from);
-      document.getElementById('f-date-to').value = ymd(to);
-      readFilters(); applyFilters(); updateKpis(); updateTimeline(); updateCharts();
-    });
-    document.getElementById('btn-thisMonth').addEventListener('click', ()=>{
-      const now = new Date(); const from = new Date(now.getFullYear(), now.getMonth(), 1);
-      const to = new Date(now.getFullYear(), now.getMonth()+1, 0);
-      document.getElementById('f-date-from').value = ymd(from);
-      document.getElementById('f-date-to').value = ymd(to);
-      readFilters(); applyFilters(); updateKpis(); updateTimeline(); updateCharts();
-    });
-    document.getElementById('btn-clearDates').addEventListener('click', ()=>{
-      document.getElementById('f-date-from').value = '';
-      document.getElementById('f-date-to').value = '';
-      readFilters(); applyFilters(); updateKpis(); updateTimeline(); updateCharts();
-    });
-    document.getElementById('btn-export').addEventListener('click', exportAggregates);
 
-    // Kick off
-    init();
+    // Loader hide after initial load
+    window.addEventListener("load", () => {
+      const loader = document.getElementById("loading-screen");
+      const dashboard = document.getElementById("dashboard");
+      setTimeout(() => {
+        loader.classList.add("hidden");
+        dashboard.classList.add("visible");
+      }, 2000);
+    });
   </script>
 </body>
 </html>
