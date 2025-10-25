@@ -183,7 +183,6 @@
     .blob.red { background-color: #ef4444; }
     .blob.blue { background-color: #3b82f6; }
     .blob.green { background-color: #22c55e; }
-    .blob.orange { background-color: #f59e0b; }
 
     @keyframes blob-bounce {
       0%   { transform: translate(-100%, -100%) translate3d(0, 0, 0); }
@@ -325,11 +324,6 @@
         <div class="content"><i data-lucide="arrow-up-circle" class="icon"></i>
           <div class="counter" data-target="70020">0</div><h3>Total Outflows</h3>
           <p>Outgoing individuals and departures disaggregated by border.</p></div></a>
-
-      <a href="demographics.html" class="card"><div class="blob orange"></div><div class="bg"></div>
-        <div class="content"><i data-lucide="users" class="icon"></i>
-          <div class="counter" data-target="25340">0</div><h3>Demographics</h3>
-          <p>Age, gender, and nationality breakdown of surveyed travelers.</p></div></a>
     </div>
 
     <!-- ===== Refresh Button ===== -->
@@ -362,7 +356,6 @@
     const counters = document.querySelectorAll(".counter");
     counters.forEach(c => animateCounter(c, c.getAttribute("data-target")));
 
-    // Auto refresh counters every 10 seconds
     setInterval(() => {
       counters.forEach(counter => {
         const baseValue = +counter.getAttribute("data-target");
@@ -373,7 +366,6 @@
       });
     }, 10000);
 
-    // Refresh button
     document.getElementById("refresh-btn").addEventListener("click", () => {
       const loader = document.getElementById("loading-screen");
       loader.classList.remove("hidden");
@@ -389,7 +381,6 @@
       }, 2000);
     });
 
-    // Loader hide after initial load
     window.addEventListener("load", () => {
       const loader = document.getElementById("loading-screen");
       const dashboard = document.getElementById("dashboard");
