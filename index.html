@@ -147,6 +147,166 @@
       50%, 90% { transform: scale(1, 0.2); }
       100% { transform: scale(1, 1); }
     }
+
+    /* ====== Animated Blob Cards ====== */
+    .cards-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      padding: 40px 20px;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    }
+
+    .card {
+      position: relative;
+      width: 220px;
+      height: 280px;
+      border-radius: 14px;
+      z-index: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 25px 25px 70px #b0b0b0, -25px -25px 70px #ffffff;
+    }
+
+    .bg {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      width: calc(100% - 10px);
+      height: calc(100% - 10px);
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(24px);
+      border-radius: 10px;
+      overflow: hidden;
+      outline: 2px solid white;
+    }
+
+    .blob {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      left: 50%;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      opacity: 0.8;
+      filter: blur(14px);
+      animation: blob-bounce 5s infinite ease-in-out;
+    }
+
+    .card:nth-child(1) .blob {
+      background-color: #418FDE; /* Blue for IDPs */
+    }
+
+    .card:nth-child(2) .blob {
+      background-color: #FF671F; /* Orange for Returnees */
+    }
+
+    .card:nth-child(3) .blob {
+      background-color: #5CB8B2; /* Teal for Cross-border */
+    }
+
+    @keyframes blob-bounce {
+      0% {
+        transform: translate(-100%, -100%) translate3d(0, 0, 0);
+      }
+      25% {
+        transform: translate(-100%, -100%) translate3d(100%, 0, 0);
+      }
+      50% {
+        transform: translate(-100%, -100%) translate3d(100%, 100%, 0);
+      }
+      75% {
+        transform: translate(-100%, -100%) translate3d(0, 100%, 0);
+      }
+      100% {
+        transform: translate(-100%, -100%) translate3d(0, 0, 0);
+      }
+    }
+
+    .content {
+      z-index: 3;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .content h3 {
+      font-size: 1.2rem;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 15px 0;
+    }
+
+    .card:nth-child(1) .value {
+      color: #418FDE;
+    }
+
+    .card:nth-child(2) .value {
+      color: #FF671F;
+    }
+
+    .card:nth-child(3) .value {
+      color: #5CB8B2;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+      .cards-container {
+        gap: 20px;
+        padding: 30px 15px;
+      }
+      
+      .card {
+        width: 180px;
+        height: 230px;
+      }
+      
+      .value {
+        font-size: 1.5rem;
+      }
+      
+      .content h3 {
+        font-size: 1rem;
+      }
+      
+      .description {
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .cards-container {
+        flex-direction: column;
+      }
+      
+      .card {
+        width: 200px;
+        height: 250px;
+      }
+    }
   </style>
 </head>
 
@@ -163,6 +323,39 @@
         <div class="loader__ball"></div>
       </div>
       <div class="loading-text">Loading Displacement Data...</div>
+    </div>
+
+    <!-- Animated Blob Cards -->
+    <div class="cards-container">
+      <div class="card">
+        <div class="blob"></div>
+        <div class="bg"></div>
+        <div class="content">
+          <h3>Internally Displaced</h3>
+          <div class="value">11,301,340</div>
+          <p class="description">People displaced within Sudan</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="blob"></div>
+        <div class="bg"></div>
+        <div class="content">
+          <h3>Returnees</h3>
+          <div class="value">396,738</div>
+          <p class="description">People who have returned to their homes</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="blob"></div>
+        <div class="bg"></div>
+        <div class="content">
+          <h3>Crossing Border</h3>
+          <div class="value">3,934,086</div>
+          <p class="description">People displaced to neighboring countries</p>
+        </div>
+      </div>
     </div>
 
     <!-- Returnee Pathways Map -->
