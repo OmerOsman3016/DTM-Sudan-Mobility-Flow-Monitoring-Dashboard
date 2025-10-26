@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-R" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: 'unsafe-inline' 'unsafe-eval'">
   <meta name="description" content="Sudan | Displacement Tracking Matrix-Returnees Flow" />
   <title>Sudan Displacement Tracking Matrix</title>
-  
+  
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link rel="stylesheet" href="./css/styles.css">
 
@@ -204,19 +204,16 @@
       filter: blur(14px);
       animation: blob-bounce 5s infinite ease-in-out;
     }
-
+    
+    /* Updated card colors after removing the second card */
     .card:nth-child(1) .blob {
-      background-color: #418FDE; /* Blue for IDPs */
+      background-color: #418FDE; /* Blue for IDPs (originally first card) */
     }
 
     .card:nth-child(2) .blob {
-      background-color: #FF671F; /* Orange for Returnees */
+      background-color: #5CB8B2; /* Teal for Cross-border (originally third card) */
     }
-
-    .card:nth-child(3) .blob {
-      background-color: #5CB8B2; /* Teal for Cross-border */
-    }
-
+    
     @keyframes blob-bounce {
       0% {
         transform: translate(-100%, -100%) translate3d(0, 0, 0);
@@ -253,16 +250,13 @@
       margin: 15px 0;
     }
 
+    /* Updated card value colors after removing the second card */
     .card:nth-child(1) .value {
-      color: #418FDE;
+      color: #418FDE; /* Blue for IDPs */
     }
 
     .card:nth-child(2) .value {
-      color: #FF671F;
-    }
-
-    .card:nth-child(3) .value {
-      color: #5CB8B2;
+      color: #5CB8B2; /* Teal for Cross-border */
     }
 
     .description {
@@ -276,20 +270,20 @@
         gap: 20px;
         padding: 30px 15px;
       }
-      
+      
       .card {
         width: 180px;
         height: 230px;
       }
-      
+      
       .value {
         font-size: 1.5rem;
       }
-      
+      
       .content h3 {
         font-size: 1rem;
       }
-      
+      
       .description {
         font-size: 0.8rem;
       }
@@ -299,7 +293,7 @@
       .cards-container {
         flex-direction: column;
       }
-      
+      
       .card {
         width: 200px;
         height: 250px;
@@ -320,7 +314,7 @@
       flex: 1; /* This makes each map container grow to fill an equal amount of space */
       min-width: 400px; /* Prevents maps from getting too small before stacking */
     }
-    
+    
     /* This makes the maps stack vertically on tablets and mobile phones */
     @media (max-width: 900px) {
       .maps-wrapper {
@@ -354,17 +348,7 @@
           <p class="description">People displaced within Sudan</p>
         </div>
       </div>
-
-      <div class="card">
-        <div class="blob"></div>
-        <div class="bg"></div>
-        <div class="content">
-          <h3>Returnees</h3>
-          <div class="value">396,738</div>
-          <p class="description">People who have returned to their homes</p>
-        </div>
-      </div>
-
+      
       <div class="card">
         <div class="blob"></div>
         <div class="bg"></div>
@@ -390,18 +374,19 @@
           <div id="map2" class="map"></div>
         </div>
       </div>
-    </div> </div>
+    </div>
+  </div>
 
   <script>
     // Loading spinner functionality with new equalizer loader
     document.addEventListener('DOMContentLoaded', function() {
       const loadingSpinner = document.getElementById('loading-spinner');
       const loadingText = document.querySelector('.loading-text');
-      
+      
       // Simulate loading for 3 seconds
       setTimeout(function() {
         loadingText.textContent = 'Almost there...';
-        
+        
         setTimeout(function() {
           loadingSpinner.style.opacity = '0';
           setTimeout(function() {
@@ -414,21 +399,21 @@
 
     // Define Mapbox custom layers
     const mapboxCustom1 = L.tileLayer('https://api.mapbox.com/styles/v1/omerosman/cm8oy6is4006101si7ll3bs4h/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoib21lcm9zbWFuIiwiYSI6ImUxZDBkODBlNjQxMDE2M2Y3OTQ3MWIwNTJkMjgzZTI3In0.ekCHuxRflTOO0RpQ6rQR7Q', {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        tileSize: 512,
-        zoomOffset: -1,
-        maxZoom: 18
+      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 18
     });
 
     const mapboxCustom2 = L.tileLayer('https://api.mapbox.com/styles/v1/omerosman/cm8oy6is4006101si7ll3bs4h/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoib21lcm9zbWFuIiwiYSI6ImUxZDBkODBlNjQxMDE2M2Y3OTQ3MWIwNTJkMjgzZTI3In0.ekCHuxRflTOO0RpQ6rQR7Q', {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        tileSize: 512,
-        zoomOffset: -1,
-        maxZoom: 18
+      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      tileSize: 512,
+      zoomOffset: -1,
+      maxZoom: 18
     });
 
-    // Initialize the Returnee Pathways map
-    const map = L.map('map').setView([16, 30], L.Browser.mobile ? 3 : 5.4);
+    // **Initialize the Returnee Pathways map (Map 1) with zoom 5.45**
+    const map = L.map('map').setView([16, 30], 5.45);
 
     // Add default base layer to the first map
     mapboxCustom1.addTo(map);
@@ -469,7 +454,8 @@
               radius: radius,
               weight: 1,
               color: feature.properties.isOrigin ? '#FFFFFF' : '#FFFFFF',
-              fillColor: feature.properties.isOrigin ? '#418FDE' : 'rgb(255, 103, 31)',
+              // Returnees: Origin is where they LEFT (Displacement State - Blue), Destination is where they ARRIVED (Return State - Orange/Red)
+              fillColor: feature.properties.isOrigin ? '#418FDE' : 'rgb(255, 103, 31)', 
               fillOpacity: feature.properties.isOrigin ? 0.8 : 0.7
             };
           },
@@ -520,7 +506,7 @@
       }
     });
 
-    // Add legend to the Returnee Pathways map
+    // Add legend to the Returnee Pathways map (Orange/Red for volume)
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = () => {
       const div = L.DomUtil.create('div', 'legend');
@@ -537,8 +523,8 @@
     };
     legend.addTo(map);
 
-    // Initialize the IDP Pathways map
-    const map2 = L.map('map2').setView([16, 30], L.Browser.mobile ? 3 : 5.4);
+    // **Initialize the IDP Pathways map (Map 2) with zoom 5.45**
+    const map2 = L.map('map2').setView([16, 30], 5.45);
 
     // Add default base layer to the second map
     mapboxCustom2.addTo(map2);
@@ -579,7 +565,8 @@
               radius: radius,
               weight: 1,
               color: feature.properties.isOrigin ? '#FFFFFF' : '#FFFFFF',
-              fillColor: feature.properties.isOrigin ? 'rgb(255, 103, 31)' : '#418FDE',
+              // IDPs: Origin is where they LEFT (Displacement State - Orange/Red), Destination is where they ARRIVED (New Location - Blue)
+              fillColor: feature.properties.isOrigin ? 'rgb(255, 103, 31)' : '#418FDE', 
               fillOpacity: feature.properties.isOrigin ? 0.8 : 0.7
             };
           },
@@ -604,7 +591,7 @@
         function addTooltip(feature, layer) {
           const tooltipContent = feature.properties.isOrigin
             ? `State of Displacement: ${feature.properties.s_State}`
-            : `State of Return: ${feature.properties.e_locality}`;
+            : `State of New Location: ${feature.properties.e_locality}`;
 
           layer.bindTooltip(tooltipContent);
           layer.on('mouseover', () => layer.openTooltip());
@@ -630,7 +617,7 @@
       }
     });
 
-    // Add legend to the IDP Pathways map
+    // Add legend to the IDP Pathways map (Orange/Red for volume)
     const legend2 = L.control({ position: 'bottomright' });
     legend2.onAdd = () => {
       const div = L.DomUtil.create('div', 'legend');
