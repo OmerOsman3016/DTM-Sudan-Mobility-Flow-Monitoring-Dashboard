@@ -567,8 +567,8 @@
             destinationGeometry: { x: 'e_lon', y: 'e_lat' }
           },
           style: (feature) => {
-            const baseRadius = 12;
-            const maxRadius = 12;
+            const baseRadius = 6;
+            const maxRadius = 20;
             const volume = feature.properties.e_Volume || 0;
 
             const radius = feature.properties.isOrigin
