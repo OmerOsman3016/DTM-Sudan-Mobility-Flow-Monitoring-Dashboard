@@ -8,12 +8,10 @@
   
   <!-- External CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="./css/styles.css">
 
   <!-- External JS -->
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/esri-leaflet@3.0.0/dist/esri-leaflet.js"></script>
   <script src="https://unpkg.com/@tweenjs/tween.js@18.6.4/dist/tween.umd.js"></script>
   <script src="./src/CanvasFlowmapLayer.js"></script>
   <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
@@ -39,76 +37,40 @@
       </div>
     </div>
 
-    <!-- IDPs Section -->
+    <!-- Returnee Pathways Map -->
     <div class="frame-container">
       <div class="map-container">
-        <h2 id="map-title-3">Total Number of IDPs by State</h2>
-        <button id="drilldown-back" class="drilldown-back">← Back to States</button>
-        <div id="map3" class="map"></div>
-      </div>
-    </div>
-    
-    <!-- Displacement Section -->
-    <div class="frame-container">
-      <div class="map-container">
-        <div id="map5" class="pie-map"></div>
-      </div>
-    </div>
-    
-    <!-- Pathways Section -->
-    <div class="frame-container">
-      <div class="map-container">
-        <div id="map2" class="map"></div>
-      </div>
-    </div>
-    
-    <!-- Country Circle Propagation Map -->
-    <div class="frame-container">
-      <div class="map-container">
-        <div id="country-circle-map" class="country-circle-map"></div>
-      </div>
-    </div>  
-
-    <!-- Returnees Section -->
-    <div class="frame-container">
-      <div class="map-container">
-        <h2 id="map-title-4">Total Number of Returnees by State</h2>
-        <div id="map4" class="map"></div>
-      </div>
-    </div>
-
-    <!-- Maps Container for Returnee Pathways -->
-    <div class="frame-container">
-      <div class="map-container">
+        <h2>Returnee Pathways Across Sudan</h2>
         <div id="map" class="map"></div>
       </div>
     </div>
-    
-    <!-- Population Distribution Map Container -->
-    <div id="population-distribution-map-wrapper"></div>
+
+    <!-- IDP Pathways Map -->
+    <div class="frame-container">
+      <div class="map-container">
+        <h2>IDP Pathways Across Sudan</h2>
+        <div id="map2" class="map"></div>
+      </div>
+    </div>
 
   </div>
 
   <script>
     // Loading spinner functionality
     document.addEventListener('DOMContentLoaded', function() {
-      // Simulate loading progress
       let progress = 0;
       const progressBar = document.getElementById('progress-bar');
       const loadingSpinner = document.getElementById('loading-spinner');
       const loadingText = document.querySelector('.loading-text');
       
-      // Update progress bar
       const progressInterval = setInterval(function() {
         progress += Math.random() * 10;
         if (progress >= 100) {
           progress = 100;
           clearInterval(progressInterval);
           
-          // Change text when loading is complete
           loadingText.textContent = 'Almost there...';
           
-          // Add a small delay before hiding to ensure everything is loaded
           setTimeout(function() {
             loadingSpinner.style.opacity = '0';
             setTimeout(function() {
@@ -136,50 +98,13 @@
         maxZoom: 18
     });
 
-    const mapboxCustom3 = L.tileLayer('https://api.mapbox.com/styles/v1/omerosman/cm8oy6is4006101si7ll3bs4h/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoib21lcm9zbWFuIiwiYSI6ImUxZDBkODBlNjQxMDE2M2Y3OTQ3MWIwNTJkMjgzZTI3In0.ekCHuxRflTOO0RpQ6rQR7Q', {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        tileSize: 512,
-        zoomOffset: -1,
-        maxZoom: 18
-    });
-
-    const mapboxCustom4 = L.tileLayer('https://api.mapbox.com/styles/v1/omerosman/cm8oy6is4006101si7ll3bs4h/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoib21lcm9zbWFuIiwiYSI6ImUxZDBkODBlNjQxMDE2M2Y3OTQ3MWIwNTJkMjgzZTI3In0.ekCHuxRflTOO0RpQ6rQR7Q', {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        tileSize: 512,
-        zoomOffset: -1,
-        maxZoom: 18
-    });
-
-    // Initialize the first map (Returnee Pathways)
+    // Initialize the Returnee Pathways map
     const map = L.map('map').setView([16, 30], L.Browser.mobile ? 3 : 5.5);
-
-    // Define multiple base layers for the first map
-    const cartoDBLight1 = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const openStreetMap1 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const esriWorldImagery1 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-    });
 
     // Add default base layer to the first map
     mapboxCustom1.addTo(map);
 
-    // Add layer control to the first map
-    const baseLayers1 = {
-      "Mapbox Custom": mapboxCustom1,
-      "CartoDB Light": cartoDBLight1,
-      "OpenStreetMap": openStreetMap1,
-      "Esri World Imagery": esriWorldImagery1
-    };
-
-    L.control.layers(baseLayers1).addTo(map);
-
-    // Parse CSV data and create flow map layer for the first map
+    // Parse CSV data and create flow map layer for Returnee Pathways
     Papa.parse('./data/data.csv', {
       download: true,
       header: true,
@@ -237,7 +162,6 @@
           onEachFeature: addTooltip
         }).addTo(map);
 
-        // Add tooltip and popup to features
         function addTooltip(feature, layer) {
           const tooltipContent = feature.properties.isOrigin
             ? `State of Displacement: ${feature.properties.s_State}`
@@ -247,7 +171,6 @@
           layer.on('mouseover', () => layer.openTooltip());
           layer.on('mouseout', () => layer.closeTooltip());
 
-          // Add popup
           const popupContent = feature.properties.isOrigin
             ? `<b>State of Displacement:</b> ${feature.properties.s_State}`
             : `<b>State of Return:</b> ${feature.properties.e_locality}`;
@@ -255,7 +178,6 @@
           layer.bindPopup(popupContent);
         }
 
-        // Highlight paths on mouseover
         flowmapLayer.on('mouseover', (e) => {
           if (e.sharedOriginFeatures.length) {
             flowmapLayer.selectFeaturesForPathDisplay(e.sharedOriginFeatures, 'SELECTION_NEW');
@@ -265,12 +187,11 @@
           }
         });
 
-        // Select initial feature for path display
         flowmapLayer.selectFeaturesForPathDisplayById('s_state_id', "SD15", true, 'SELECTION_NEW');
       }
     });
 
-    // Add legend to the first map
+    // Add legend to the Returnee Pathways map
     const legend = L.control({ position: 'bottomright' });
     legend.onAdd = () => {
       const div = L.DomUtil.create('div', 'legend');
@@ -287,36 +208,13 @@
     };
     legend.addTo(map);
 
-    // Initialize the second map (IDP Pathways)
+    // Initialize the IDP Pathways map
     const map2 = L.map('map2').setView([16, 30], L.Browser.mobile ? 3 : 5.5);
-
-    // Define multiple base layers for the second map
-    const cartoDBLight2 = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const openStreetMap2 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const esriWorldImagery2 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-    });
 
     // Add default base layer to the second map
     mapboxCustom2.addTo(map2);
 
-    // Add layer control to the second map
-    const baseLayers2 = {
-      "Mapbox Custom": mapboxCustom2,
-      "CartoDB Light": cartoDBLight2,
-      "OpenStreetMap": openStreetMap2,
-      "Esri World Imagery": esriWorldImagery2
-    };
-
-    L.control.layers(baseLayers2).addTo(map2);
-
-    // Parse CSV data and create flow map layer for the second map
+    // Parse CSV data and create flow map layer for IDP Pathways
     Papa.parse('./data/data_idps.csv', {
       download: true,
       header: true,
@@ -374,7 +272,6 @@
           onEachFeature: addTooltip
         }).addTo(map2);
 
-        // Add tooltip and popup to features
         function addTooltip(feature, layer) {
           const tooltipContent = feature.properties.isOrigin
             ? `State of Displacement: ${feature.properties.s_State}`
@@ -384,7 +281,6 @@
           layer.on('mouseover', () => layer.openTooltip());
           layer.on('mouseout', () => layer.closeTooltip());
 
-          // Add popup
           const popupContent = feature.properties.isOrigin
             ? `<b>Displacement From:</b> ${feature.properties.s_State}`
             : `<b>Displacement To:</b> ${feature.properties.e_locality}`;
@@ -392,7 +288,6 @@
           layer.bindPopup(popupContent);
         }
 
-        // Highlight paths on mouseover
         flowmapLayer2.on('mouseover', (e) => {
           if (e.sharedOriginFeatures.length) {
             flowmapLayer2.selectFeaturesForPathDisplay(e.sharedOriginFeatures, 'SELECTION_NEW');
@@ -402,12 +297,11 @@
           }
         });
 
-        // Select initial feature for path display
         flowmapLayer2.selectFeaturesForPathDisplayById('s_state_id', "SD15", true, 'SELECTION_NEW');
       }
     });
 
-    // Add legend to the second map
+    // Add legend to the IDP Pathways map
     const legend2 = L.control({ position: 'bottomright' });
     legend2.onAdd = () => {
       const div = L.DomUtil.create('div', 'legend');
@@ -423,502 +317,6 @@
       return div;
     };
     legend2.addTo(map2);
-
-    // Initialize the third map (IDPs by State)
-    const map3 = L.map('map3').setView([16, 30], L.Browser.mobile ? 3 : 5.5);
-
-    // Define multiple base layers for the third map
-    const cartoDBLight3 = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const openStreetMap3 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    });
-
-    const esriWorldImagery3 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-    });
-
-    // Add default base layer to the third map
-    mapboxCustom3.addTo(map3);
-
-    // Add layer control to the third map
-    const baseLayers3 = {
-      "Mapbox Custom": mapboxCustom3,
-      "CartoDB Light": cartoDBLight3,
-      "OpenStreetMap": openStreetMap3,
-      "Esri World Imagery": esriWorldImagery3
-    };
-
-    L.control.layers(baseLayers3).addTo(map3);
-
-    // Variables for drill-down functionality
-    let stateMarkersLayer = L.layerGroup();
-    let districtMarkersLayer = L.layerGroup();
-    let currentState = null;
-    const drilldownBackBtn = document.getElementById('drilldown-back');
-
-    // Parse CSV data and create animated markers for the third map
-    Papa.parse('./data/total_idps.csv', {
-      download: true,
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const geoJsonFeatureCollection3 = {
-          type: 'FeatureCollection',
-          features: results.data.map(datum => ({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [datum.lon, datum.lat] },
-            properties: datum
-          }))
-        };
-
-        // Find the maximum total_idps value for normalization
-        const maxTotalIdps = Math.max(...results.data.map(d => d.total_idps));
-
-        // Function to animate circle markers
-        function animateCircleMarker(marker, baseRadius) {
-          const tween = new TWEEN.Tween({ radius: baseRadius })
-            .to({ radius: baseRadius * 1.5 }, 1000)
-            .easing(TWEEN.Easing.Sinusoidal.InOut)
-            .yoyo(true)
-            .repeat(Infinity)
-            .onUpdate(({ radius }) => {
-              marker.setRadius(radius);
-            })
-            .start();
-        }
-
-        // Add animated markers to the third map
-        L.geoJSON(geoJsonFeatureCollection3, {
-          pointToLayer: (feature, latlng) => {
-            // Normalize the total_idps value to determine the base radius
-            const baseRadius = 8 + (feature.properties.total_idps / maxTotalIdps) * 20;
-
-            // Create a circle marker
-            const marker = L.circleMarker(latlng, {
-              radius: baseRadius,
-              fillColor: '#418FDE',
-              color: '#fff',
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.7
-            });
-
-            // Animate the marker
-            animateCircleMarker(marker, baseRadius);
-
-            return marker;
-          },
-          onEachFeature: (feature, layer) => {
-            const popupContent = `
-              <b>State:</b> ${feature.properties.state}<br/>
-              <b>Total IDPs:</b> ${feature.properties.total_idps.toLocaleString()}
-            `;
-            layer.bindPopup(popupContent);
-
-            // Add tooltip
-            const tooltipContent = `<b>${feature.properties.state}</b><br/>
-              <b>Total IDPs:</b> ${feature.properties.total_idps.toLocaleString()}`;
-            layer.bindTooltip(tooltipContent);
-          }
-        }).addTo(stateMarkersLayer);
-
-        // Add state markers layer to map
-        map3.addLayer(stateMarkersLayer);
-      }
-    });
-
-    // Update Tween.js animations on each frame
-    function animate() {
-      requestAnimationFrame(animate);
-      TWEEN.update();
-    }
-    animate();
-
-    // Add legend to the third map
-    const legend3 = L.control({ position: 'bottomright' });
-    legend3.onAdd = () => {
-      const div = L.DomUtil.create('div', 'legend');
-      div.innerHTML = `
-        <span style="font-size:14px; font-weight:bold;">Total IDPs by State:</span><br/>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-          <div style="width: 10px; height: 10px; background: #418FDE; border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;">  < 500,000 IDPs</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 5px;">
-          <div style="width: 20px; height: 20px; background: #418FDE; border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;"> 500,001 - 1,000,000 IDPs</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 5px;">
-          <div style="width: 30px; height: 30px; background: #418FDE; border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;"> > 1,000,001 IDPs</span>
-        </div>
-      `;
-      return div;
-    };
-    legend3.addTo(map3);
-    
-    // Initialize the fourth map (Returnees by State)
-    const map4 = L.map('map4').setView([16, 30], 5.5);
-
-    // Define multiple base layers for the fourth map
-    const cartoDBLight4 = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap'
-    });
-
-    const openStreetMap4 = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    });
-
-    const esriWorldImagery4 = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-    });
-
-    // Add default base layer to the fourth map
-    mapboxCustom4.addTo(map4);
-
-    // Add layer control to the fourth map
-    const baseLayers4 = {
-      "Mapbox Custom": mapboxCustom4,
-      "CartoDB Light": cartoDBLight4,
-      "OpenStreetMap": openStreetMap4,
-      "Esri World Imagery": esriWorldImagery4
-    };
-
-    L.control.layers(baseLayers4).addTo(map4);
-
-    // Parse CSV data and create animated markers for the fourth map
-    Papa.parse('./data/total_return.csv', {
-      download: true,
-      header: true,
-      dynamicTyping: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const geoJsonFeatureCollection4 = {
-          type: 'FeatureCollection',
-          features: results.data.map(datum => ({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [datum.lon, datum.lat] },
-            properties: datum
-          }))
-        };
-
-        // Find the maximum total_return value for normalization
-        const maxTotalReturn = Math.max(...results.data.map(d => d.total_return));
-
-        // Function to animate circle markers
-        function animateCircleMarker(marker, baseRadius) {
-          const tween = new TWEEN.Tween({ radius: baseRadius })
-            .to({ radius: baseRadius * 1.5 }, 1000)
-            .easing(TWEEN.Easing.Sinusoidal.InOut)
-            .yoyo(true)
-            .repeat(Infinity)
-            .onUpdate(({ radius }) => {
-              marker.setRadius(radius);
-            })
-            .start();
-        }
-
-        // Add animated markers to the fourth map
-        L.geoJSON(geoJsonFeatureCollection4, {
-          pointToLayer: (feature, latlng) => {
-            // Normalize the total_return value to determine the base radius
-            const baseRadius = 8 + (feature.properties.total_return / maxTotalReturn) * 20;
-
-            // Create a circle marker
-            const marker = L.circleMarker(latlng, {
-              radius: baseRadius,
-              fillColor: 'rgba(255, 103, 31, 0.8)',
-              color: '#fff',
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.7
-            });
-
-            // Animate the marker
-            animateCircleMarker(marker, baseRadius);
-
-            return marker;
-          },
-          onEachFeature: (feature, layer) => {
-            const popupContent = `
-              <b>State:</b> ${feature.properties.state}<br/>
-              <b>Total Returnees:</b> ${feature.properties.total_return.toLocaleString()}
-            `;
-            layer.bindPopup(popupContent);
-
-            // Add tooltip
-            const tooltipContent = `<b>${feature.properties.state}</b><br/>
-              <b>Total Returnees:</b> ${feature.properties.total_return.toLocaleString()}`;
-            layer.bindTooltip(tooltipContent);
-          }
-        }).addTo(map4);
-      }
-    });
-
-    // Add legend to the fourth map
-    const legend4 = L.control({ position: 'bottomleft' });
-    legend4.onAdd = () => {
-      const div = L.DomUtil.create('div', 'legend');
-      div.innerHTML = `
-        <span style="font-size:14px; font-weight:bold;">Total Returnees by State:</span><br/>
-        <div style="display: flex; align-items: center; margin-top: 10px;">
-          <div style="width: 10px; height: 10px; background: rgba(255, 103, 31, 0.8); border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;">< 10,000 Returnees</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 5px;">
-          <div style="width: 20px; height: 20px; background: rgba(255, 103, 31, 0.8); border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;">10,000 - 50,000 Returnees</span>
-        </div>
-        <div style="display: flex; align-items: center; margin-top: 5px;">
-          <div style="width: 30px; height: 30px; background: rgba(255, 103, 31, 0.8); border-radius: 50%; margin-right: 10px;"></div>
-          <span style="font-size:12px;"> > 50,000 Returnees</span>
-        </div>
-      `;
-      return div;
-    };
-    legend4.addTo(map4);
-
-    // Initialize the country circle map
-    const countryCircleMap = L.map('country-circle-map').setView([16, 30], 5);
-    
-    // Define multiple base layers for the country circle map
-    const cartoDBLightCountry = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap'
-    });
-
-    const openStreetMapCountry = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
-    });
-
-    const esriWorldImageryCountry = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-    });
-
-    const mapboxCustomCountry = L.tileLayer('https://api.mapbox.com/styles/v1/omerosman/cm8oy6is4006101si7ll3bs4h/tiles/{z}/{x}/{y}?access_token=pk.eyJ1Ijoib21lcm9zbWFuIiwiYSI6ImUxZDBkODBlNjQxMDE2M2Y3OTQ3MWIwNTJkMjgzZTI3In0.ekCHuxRflTOO0RpQ6rQR7Q', {
-      attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      tileSize: 512,
-      zoomOffset: -1,
-      maxZoom: 18
-    });
-
-    // Add default base layer to the country circle map
-    mapboxCustomCountry.addTo(countryCircleMap);
-
-    // Add layer control to the country circle map
-    const baseLayersCountry = {
-      "CartoDB Light": cartoDBLightCountry,
-      "OpenStreetMap": openStreetMapCountry,
-      "Esri World Imagery": esriWorldImageryCountry,
-      "Mapbox Custom": mapboxCustomCountry
-    };
-
-    // Country data with coordinates and volume
-    const countryData = [
-      {country: "Egypt", e_lat: 26.8206, e_lon: 30.8025, Volume: 1500000},
-      {country: "libya", e_lat: 26.3351, e_lon: 17.2283, Volume: 105721},
-      {country: "Chad", e_lat: 15.4542, e_lon: 18.7322, Volume: 767365},
-      {country: "Central African Republic", e_lat: 6.6111, e_lon: 20.9394, Volume: 35376},
-      {country: "South Sudan", e_lat: 6.877, e_lon: 31.307, Volume: 341909},
-      {country: "Ethiopia", e_lat: 9.145, e_lon: 40.4897, Volume: 88001},
-      {country: "Eritrea", e_lat: 15.1794, e_lon: 39.7823, Volume: 14141}
-    ];
-
-    // Find the maximum volume for scaling
-    const maxVolume = Math.max(...countryData.map(d => d.Volume));
-
-    // Create a layer group for the country circles
-    const countryCirclesLayer = L.layerGroup().addTo(countryCircleMap);
-
-    // Function to animate circle markers
-    function animateCircleMarker(marker, baseRadius) {
-      const tween = new TWEEN.Tween({ radius: baseRadius })
-        .to({ radius: baseRadius * 1.5 }, 1500)
-        .easing(TWEEN.Easing.Sinusoidal.InOut)
-        .yoyo(true)
-        .repeat(Infinity)
-        .onUpdate(({ radius }) => {
-          marker.setRadius(radius);
-        })
-        .start();
-    }
-
-    // Add animated circle markers for each country to the layer group
-    countryData.forEach(country => {
-      // Calculate base radius based on volume (scaled to a reasonable size)
-      const baseRadius = 5 + (country.Volume / maxVolume) * 30;
-      
-      // Create circle marker
-      const circle = L.circleMarker([country.e_lat, country.e_lon], {
-        radius: baseRadius,
-        fillColor: '#5CB8B2',
-        color: '#fff',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.7
-      }).addTo(countryCirclesLayer);
-
-      // Add animation
-      animateCircleMarker(circle, baseRadius);
-
-      // Add popup with country info
-      circle.bindPopup(`
-        <b>${country.country}</b><br>
-        Volume: ${country.Volume.toLocaleString()}
-      `);
-
-      // Add tooltip
-      circle.bindTooltip(`
-        <b>${country.country}</b><br>
-        Volume: ${country.Volume.toLocaleString()}
-      `);
-    });
-
-    // Add overlay control for the country circles
-    const overlaysCountry = {
-      "Displacement Circles": countryCirclesLayer
-    };
-
-    // Add layer control with both base layers and overlays
-    L.control.layers(baseLayersCountry, overlaysCountry).addTo(countryCircleMap);
-
-    // Add legend for the country circle map
-    const countryLegend = L.control({ position: 'bottomright' });
-    countryLegend.onAdd = () => {
-      const div = L.DomUtil.create('div', 'legend');
-      div.innerHTML = `
-        <h4>Displacement to Neighboring Countries</h4>
-        <div style="display: flex; align-items: center; margin: 5px 0;">
-          <svg width="20" height="20">
-            <circle cx="10" cy="10" r="10" fill="#5CB8B2"/>
-          </svg>
-          Displaced Population
-        </div>
-        <p>Circle size represents relative volume</p>
-      `;
-      return div;
-    };
-    countryLegend.addTo(countryCircleMap);
-
-    // Pie Chart Map Showing Displacement Proportions
-    const map5 = L.map('map5').setView([16, 30], L.Browser.mobile ? 3 : 5.5);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map5);
-
-    // State data with coordinates (lat, lng), displaced, total population
-    const stateData = [
-      ["Aj Jazirah", 14.900, 33.434, 876156, 5687557],
-      ["Blue Nile", 11.270, 34.390, 270810, 1344267],
-      ["Central Darfur", 12.900, 23.470, 749491, 1786503],
-      ["East Darfur", 11.160, 26.140, 247874, 1213951],
-      ["Gedaref", 14.040, 35.380, 14327, 2545604],
-      ["Kassala", 15.450, 36.400, 6211, 2811446],
-      ["Khartoum", 15.501, 32.560, 3500400, 9146191],
-      ["North Darfur", 15.766, 27.333, 1844175, 2775652],
-      ["North Kordofan", 13.630, 27.930, 91161, 2160476],
-      ["Northern", 19.615, 30.416, 12052, 1023194],
-      ["Red Sea", 19.580, 37.130, 30480, 1549857],
-      ["River Nile", 18.500, 33.800, 53683, 1651873],
-      ["Sennar", 13.550, 33.600, 244250, 2170863],
-      ["South Darfur", 11.783, 24.883, 2082537, 3912372],
-      ["South Kordofan", 11.150, 29.633, 414734, 2017962],
-      ["West Darfur", 12.900, 22.466, 368971, 1940860],
-      ["West Kordofan", 11.200, 28.433, 314484, 1713462],
-      ["White Nile", 13.450, 32.500, 179544, 3046811]
-    ];
-
-    // Create pie chart icon function with standardized size
-    function createPieChartIcon(displaced, total, sizeFactor = 1) {
-      const displacedPercent = displaced / total;
-      const endAngle = displacedPercent * 360;
-      
-      // Use a fixed radius for all pie charts
-      const baseRadius = 30;
-      const radius = baseRadius * sizeFactor;
-      
-      const svg = `
-        <svg width="${radius * 2}" height="${radius * 2}" viewBox="0 0 ${radius * 2} ${radius * 2}">
-          <circle cx="${radius}" cy="${radius}" r="${radius}" fill="#418FDE"/>
-          <path d="M${radius},${radius} L${radius},0 A${radius},${radius} 0 ${endAngle > 180 ? 1 : 0},1 
-            ${radius + Math.sin((endAngle * Math.PI)/180) * radius},
-            ${radius - Math.cos((endAngle * Math.PI)/180) * radius} z" 
-            fill="rgba(255, 103, 31, 0.8)"/>
-          <circle cx="${radius}" cy="${radius}" r="${radius * 0.6}" fill="white" opacity="0.7"/>
-          <text x="${radius}" y="${radius}" text-anchor="middle" dominant-baseline="middle" 
-                font-size="${8 * sizeFactor}" font-weight="bold" fill="#e04c4c">
-            ${Math.round(displacedPercent * 100)}%
-          </text>
-        </svg>
-      `;
-
-      return L.divIcon({
-        html: svg,
-        iconSize: [radius * 2, radius * 2],
-        className: 'pie-chart-marker'
-      });
-    }
-
-    // Create a layer group for the pie chart markers
-    const pieMarkersLayer = L.layerGroup().addTo(map5);
-    
-    // Store references to all pie chart markers
-    const pieMarkers = [];
-
-    // Add markers with standardized pie charts
-    stateData.forEach(state => {
-      const [name, lat, lng, displaced, total] = state;
-      
-      const marker = L.marker([lat, lng], {
-        icon: createPieChartIcon(displaced, total, 1.0)
-      }).addTo(pieMarkersLayer).bindPopup(`
-        <b>${name}</b><br>
-        Total Population: ${total.toLocaleString()}<br>
-        Displaced: ${displaced.toLocaleString()} (${((displaced/total)*100).toFixed(1)}%)<br>
-        Non-Displaced: ${(total - displaced).toLocaleString()}
-      `);
-      
-      // Store reference to marker
-      pieMarkers.push({
-        name: name,
-        lat: lat,
-        lng: lng,
-        displaced: displaced,
-        total: total,
-        marker: marker
-      });
-    });
-
-    // Enhanced legend control for pie chart map
-    const legend5 = L.control({position: 'bottomright'});
-    legend5.onAdd = () => {
-      const div = L.DomUtil.create('div', 'legend');
-      div.innerHTML = `
-        <h4>Displacement Proportion</h4>
-        <div class="legend-checkbox">
-          <input type="checkbox" id="displaced-checkbox" checked>
-          <label for="displaced-checkbox">Displaced Population</label>
-        </div>
-        <div class="legend-checkbox">
-          <input type="checkbox" id="remaining-checkbox" checked>
-          <label for="remaining-checkbox">Remaining Population</label>
-        </div>
-        <div class="marker-size-controls">
-          <div class="marker-size-label">Marker Size</div>
-          <div class="marker-size-buttons">
-            <button id="size-small">Small</button>
-            <button id="size-medium" class="active">Medium</button>
-            <button id="size-large">Large</button>
-          </div>
-        </div>
-      `;
-      
-      return div;
-    };
-    legend5.addTo(map5);
   </script>
 </body>
 </html>
