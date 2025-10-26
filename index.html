@@ -482,8 +482,8 @@
       <h2 class="map-section-title">Displacement Pathways Analysis</h2>
       
       <div class="map-toggle-buttons">
-        <button class="map-toggle-btn active" data-map="idp">IDP Pathways</button>
-        <button class="map-toggle-btn" data-map="returnee">Returnee Pathways</button>
+        <button class="map-toggle-btn active" id="idp-btn">IDP Pathways</button>
+        <button class="map-toggle-btn" id="returnee-btn">Returnee Pathways</button>
       </div>
 
       <div class="map-container-main">
@@ -536,6 +536,7 @@
     let currentFlowmapLayer = null;
     let idpFlowmapLayer = null;
     let returneeFlowmapLayer = null;
+    let currentLegend = null;
 
     // Function to add tooltip and popup to features
     function addTooltip(feature, layer, isIDP = false) {
@@ -565,7 +566,7 @@
         }))
       };
 
-      return L.canvasFlowmapLayer(geoJsonFeatureCollection, {
+      const flowmapLayer = L.canvasFlowmapLayer(geoJsonFeatureCollection, {
         originAndDestinationFieldIds: {
           originUniqueIdField: 's_state_id',
           originGeometry: { x: 's_lon', y: 's_lat' },
@@ -608,6 +609,48 @@
         animationDuration: 3000,
         onEachFeature: (feature, layer) => addTooltip(feature, layer, isIDP)
       });
+
+      // Set up event handlers for the layer
+      flowmapLayer.on('mouseover', (e) => {
+        if (e.sharedOriginFeatures.length) {
+          flowmapLayer.selectFeaturesForPathDisplay(e.sharedOriginFeatures, 'SELECTION_NEW');
+        }
+        if (e.sharedDestinationFeatures.length) {
+          flowmapLayer.selectFeaturesForPathDisplay(e.sharedDestinationFeatures, 'SELECTION_NEW');
+        }
+      });
+
+      // Select initial features
+      flowmapLayer.selectFeaturesForPathDisplayById('s_state_id', "SD15", true, 'SELECTION_NEW');
+
+      return flowmapLayer;
+    }
+
+    // Function to update legend
+    function updateLegend(isIDP) {
+      // Remove existing legend
+      if (currentLegend) {
+        mainMap.removeControl(currentLegend);
+      }
+
+      const legend = L.control({ position: 'bottomright' });
+      legend.onAdd = () => {
+        const div = L.DomUtil.create('div', 'legend');
+        const mapType = isIDP ? 'IDP' : 'Returnee';
+        div.innerHTML = `
+          <span style="font-size:14px">${mapType} Flow Volume:</span><br/>
+          <div style="width:70px;height:3px;background:#ffb81c;float:left;margin-right:10px;margin-top:10px"></div>
+          <span style="float:left;font-weight:bold"> < 10000</span><br/>
+          <div style="width:70px;height:4px;background:#ff671f;float:left;margin-right:10px;margin-top:10px"></div>
+          <span style="float:left;font-weight:bold">10,001 - 20,000</span><br/>
+          <div style="width:70px;height:7px;background:#e34a33;float:left;margin-right:10px;margin-top:10px"></div>
+          <span style="float:left;font-weight:bold"> > 20,000</span><br/>
+        `;
+        return div;
+      };
+      
+      legend.addTo(mainMap);
+      currentLegend = legend;
     }
 
     // Function to switch between maps
@@ -638,88 +681,51 @@
       document.querySelectorAll('.map-toggle-btn').forEach(btn => {
         btn.classList.remove('active');
       });
-      document.querySelector(`.map-toggle-btn[data-map="${mapType}"]`).classList.add('active');
+      document.getElementById(`${mapType}-btn`).classList.add('active');
     }
 
-    // Function to update legend
-    function updateLegend(isIDP) {
-      // Remove existing legend
-      if (window.currentLegend) {
-        mainMap.removeControl(window.currentLegend);
-      }
-
-      const legend = L.control({ position: 'bottomright' });
-      legend.onAdd = () => {
-        const div = L.DomUtil.create('div', 'legend');
-        const mapType = isIDP ? 'IDP' : 'Returnee';
-        div.innerHTML = `
-          <span style="font-size:14px">${mapType} Flow Volume:</span><br/>
-          <div style="width:70px;height:3px;background:#ffb81c;float:left;margin-right:10px;margin-top:10px"></div>
-          <span style="float:left;font-weight:bold"> < 10000</span><br/>
-          <div style="width:70px;height:4px;background:#ff671f;float:left;margin-right:10px;margin-top:10px"></div>
-          <span style="float:left;font-weight:bold">10,001 - 20,000</span><br/>
-          <div style="width:70px;height:7px;background:#e34a33;float:left;margin-right:10px;margin-top:10px"></div>
-          <span style="float:left;font-weight:bold"> > 20,000</span><br/>
-        `;
-        return div;
-      };
-      
-      legend.addTo(mainMap);
-      window.currentLegend = legend;
-    }
-
-    // Load both datasets
-    Promise.all([
-      // Load IDP data
-      new Promise((resolve) => {
-        Papa.parse('./data/data_idps.csv', {
-          download: true,
-          header: true,
-          dynamicTyping: true,
-          skipEmptyLines: true,
-          complete: (results) => resolve(results.data)
-        });
-      }),
-      // Load Returnee data
-      new Promise((resolve) => {
+    // Load IDP data first
+    Papa.parse('./data/data_idps.csv', {
+      download: true,
+      header: true,
+      dynamicTyping: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        console.log('IDP Data loaded:', results.data.length, 'records');
+        idpFlowmapLayer = createFlowmapLayer(results.data, true);
+        
+        // Load returnee data after IDP data
         Papa.parse('./data/data.csv', {
           download: true,
           header: true,
           dynamicTyping: true,
           skipEmptyLines: true,
-          complete: (results) => resolve(results.data)
-        });
-      })
-    ]).then(([idpData, returneeData]) => {
-      // Create flowmap layers
-      idpFlowmapLayer = createFlowmapLayer(idpData, true);
-      returneeFlowmapLayer = createFlowmapLayer(returneeData, false);
-
-      // Set up event handlers for both layers
-      [idpFlowmapLayer, returneeFlowmapLayer].forEach(layer => {
-        layer.on('mouseover', (e) => {
-          if (e.sharedOriginFeatures.length) {
-            layer.selectFeaturesForPathDisplay(e.sharedOriginFeatures, 'SELECTION_NEW');
+          complete: function(results) {
+            console.log('Returnee Data loaded:', results.data.length, 'records');
+            returneeFlowmapLayer = createFlowmapLayer(results.data, false);
+            
+            // Set initial map to IDP
+            switchMap('idp');
+            
+            // Add button event listeners
+            document.getElementById('idp-btn').addEventListener('click', () => {
+              switchMap('idp');
+            });
+            
+            document.getElementById('returnee-btn').addEventListener('click', () => {
+              switchMap('returnee');
+            });
+          },
+          error: function(error) {
+            console.error('Error loading returnee data:', error);
+            // Set initial map to IDP even if returnee data fails
+            switchMap('idp');
           }
-          if (e.sharedDestinationFeatures.length) {
-            layer.selectFeaturesForPathDisplay(e.sharedDestinationFeatures, 'SELECTION_NEW');
-          }
         });
-      });
-
-      // Select initial features
-      idpFlowmapLayer.selectFeaturesForPathDisplayById('s_state_id', "SD15", true, 'SELECTION_NEW');
-      returneeFlowmapLayer.selectFeaturesForPathDisplayById('s_state_id', "SD15", true, 'SELECTION_NEW');
-
-      // Set initial map to IDP
-      switchMap('idp');
-
-      // Add button event listeners
-      document.querySelectorAll('.map-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          switchMap(btn.dataset.map);
-        });
-      });
+      },
+      error: function(error) {
+        console.error('Error loading IDP data:', error);
+      }
     });
 
   </script>
