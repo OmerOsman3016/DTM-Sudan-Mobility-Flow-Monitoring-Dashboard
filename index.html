@@ -273,6 +273,77 @@
       line-height: 1.4;
     }
 
+    /* ====== Maps Section ====== */
+    .maps-section {
+      padding: 40px 20px;
+      background: #f8fafc;
+    }
+
+    .maps-section-title {
+      text-align: center;
+      font-size: 2rem;
+      color: #1e3a8a;
+      margin-bottom: 40px;
+      font-weight: 600;
+    }
+
+    .maps-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .map-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .map-wrapper:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .map-header {
+      padding: 20px;
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      color: white;
+      text-align: center;
+    }
+
+    .map-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .map-container-inner {
+      height: 500px;
+      position: relative;
+    }
+
+    .map-container-inner .map {
+      height: 100%;
+      width: 100%;
+      border: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .maps-container {
+        grid-template-columns: 1fr;
+        max-width: 800px;
+      }
+      
+      .map-container-inner {
+        height: 450px;
+      }
+    }
+
     @media (max-width: 768px) {
       .cards-container {
         gap: 20px;
@@ -295,6 +366,19 @@
       .description {
         font-size: 0.8rem;
       }
+      
+      .maps-section {
+        padding: 30px 15px;
+      }
+      
+      .maps-section-title {
+        font-size: 1.6rem;
+        margin-bottom: 30px;
+      }
+      
+      .map-container-inner {
+        height: 400px;
+      }
     }
 
     @media (max-width: 600px) {
@@ -305,6 +389,14 @@
       .card {
         width: 200px;
         height: 250px;
+      }
+      
+      .map-header h2 {
+        font-size: 1.2rem;
+      }
+      
+      .map-container-inner {
+        height: 350px;
       }
     }
   </style>
@@ -358,19 +450,29 @@
       </div>
     </div>
 
-    <!-- Returnee Pathways Map -->
-    <div class="frame-container">
-      <div class="map-container">
-        <h2>Returnee Pathways Across Sudan</h2>
-        <div id="map" class="map"></div>
-      </div>
-    </div>
+    <!-- Maps Section -->
+    <div class="maps-section">
+      <h2 class="maps-section-title">Displacement Pathways Analysis</h2>
+      <div class="maps-container">
+        <!-- IDP Pathways Map -->
+        <div class="map-wrapper">
+          <div class="map-header">
+            <h2>IDP Pathways Across Sudan</h2>
+          </div>
+          <div class="map-container-inner">
+            <div id="map2" class="map"></div>
+          </div>
+        </div>
 
-    <!-- IDP Pathways Map -->
-    <div class="frame-container">
-      <div class="map-container">
-        <h2>IDP Pathways Across Sudan</h2>
-        <div id="map2" class="map"></div>
+        <!-- Returnee Pathways Map -->
+        <div class="map-wrapper">
+          <div class="map-header">
+            <h2>Returnee Pathways Across Sudan</h2>
+          </div>
+          <div class="map-container-inner">
+            <div id="map" class="map"></div>
+          </div>
+        </div>
       </div>
     </div>
 
